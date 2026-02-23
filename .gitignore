@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.agekey
+
+# Prisma
+.prisma/
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors (local settings only; .vscode/ is committed for shared config)
+*.swp
+*.swo
+*~
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# Logs
+*.log
+pids/
+*.pid
+*.seed

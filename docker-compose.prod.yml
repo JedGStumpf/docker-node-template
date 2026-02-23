@@ -1,0 +1,52 @@
+# Production Docker Swarm stack
+# Usage: TAG=v1 docker stack deploy -c docker-compose.prod.yml myapp
+services:
+  db:
+    image: postgres:16-alpine
+    secrets:
+      - db_password
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  server:
+    image: ${REGISTRY:-registry.local}/myapp-server:${TAG:-latest}
+    secrets:
+      - db_password
+      - session_secret
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["node", "dist/index.js"]
+    environment:
+      DATABASE_URL: postgres://app:@db:5432/app
+      NODE_ENV: production
+      PORT: "3000"
+    deploy:
+      labels:
+        caddy: ${APP_DOMAIN:-myapp.jtlapp.net}
+        caddy.reverse_proxy: "{{upstreams 3000}}"
+      replicas: 2
+    depends_on:
+      - db
+
+  client:
+    image: ${REGISTRY:-registry.local}/myapp-client:${TAG:-latest}
+    deploy:
+      labels:
+        caddy: ${APP_DOMAIN:-myapp.jtlapp.net}
+        caddy.path: /
+        caddy.reverse_proxy: "{{upstreams 80}}"
+
+secrets:
+  db_password:
+    external: true
+  session_secret:
+    external: true
+
+volumes:
+  pgdata:
