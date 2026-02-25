@@ -1,6 +1,6 @@
 {
   "name": "Docker Node App",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bookworm",
 
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
@@ -8,7 +8,6 @@
       "version": "3.12",
       "installTools": true
     },
-    "ghcr.io/devcontainers/features/sops:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
