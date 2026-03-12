@@ -1,6 +1,10 @@
 ---
-title: "No user-facing login page"
+title: No user-facing login page
 priority: high
+status: done
+sprint: '010'
+tickets:
+- '001'
 ---
 
 ## Problem

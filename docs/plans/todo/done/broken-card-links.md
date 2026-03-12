@@ -1,6 +1,10 @@
 ---
-title: "Home page cards link to non-existent routes"
+title: Home page cards link to non-existent routes
 priority: high
+status: done
+sprint: '010'
+tickets:
+- '003'
 ---
 
 ## Problem

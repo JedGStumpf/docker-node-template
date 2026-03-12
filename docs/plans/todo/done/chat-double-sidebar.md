@@ -1,6 +1,10 @@
 ---
-title: "Chat page has double sidebar (chat-ception)"
+title: Chat page has double sidebar (chat-ception)
 priority: high
+status: done
+sprint: '010'
+tickets:
+- '002'
 ---
 
 ## Problem

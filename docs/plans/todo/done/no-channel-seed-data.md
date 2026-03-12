@@ -1,6 +1,10 @@
 ---
-title: "No seed data for channels — chat is empty on fresh install"
+title: "No seed data for channels \u2014 chat is empty on fresh install"
 priority: medium
+status: done
+sprint: '010'
+tickets:
+- '004'
 ---
 
 ## Problem

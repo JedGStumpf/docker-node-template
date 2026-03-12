@@ -1,6 +1,10 @@
 ---
-title: "Fake placeholder user masks auth failures"
+title: Fake placeholder user masks auth failures
 priority: high
+status: done
+sprint: '010'
+tickets:
+- '001'
 ---
 
 ## Problem

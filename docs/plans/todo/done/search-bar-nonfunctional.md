@@ -1,6 +1,10 @@
 ---
-title: "Search bar in topbar does nothing"
+title: Search bar in topbar does nothing
 priority: medium
+status: done
+sprint: '010'
+tickets:
+- '004'
 ---
 
 ## Problem
