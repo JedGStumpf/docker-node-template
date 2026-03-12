@@ -96,42 +96,46 @@ export default function Chat() {
       .catch(() => setError('Failed to load channels'));
   }, []);
 
-  // ---- Fetch messages when channel changes + poll ----
+  // ---- Fetch messages on channel change + SSE for real-time updates ----
   useEffect(() => {
     if (selectedChannelId === null) return;
 
     let cancelled = false;
 
+    // Initial fetch to load existing messages
     async function fetchMessages() {
       try {
         const res = await fetch(`/api/channels/${selectedChannelId}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!cancelled) {
-          setMessages((prev) => {
-            const newMessages: Message[] = data.messages;
-            // Avoid replacing if ids are identical (prevents flicker)
-            if (
-              prev.length === newMessages.length &&
-              prev.length > 0 &&
-              prev[prev.length - 1].id === newMessages[newMessages.length - 1]?.id
-            ) {
-              return prev;
-            }
-            return newMessages;
-          });
+          setMessages(data.messages);
         }
       } catch {
-        // Silently ignore poll errors
+        // Silently ignore fetch errors
       }
     }
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
+
+    // SSE for real-time updates
+    const es = new EventSource(`/api/channels/${selectedChannelId}/events`);
+    es.addEventListener('message', (e) => {
+      if (cancelled) return;
+      try {
+        const msg: Message = JSON.parse(e.data);
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      } catch {
+        // Ignore malformed events
+      }
+    });
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      es.close();
     };
   }, [selectedChannelId]);
 
