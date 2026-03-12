@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import AppLayout from './components/AppLayout';
+import Login from './pages/Login';
 import Home from './pages/Home';
 import Chat from './pages/Chat';
 import About from './pages/About';
 import McpSetup from './pages/McpSetup';
+import ComingSoon from './pages/ComingSoon';
+import NotFound from './pages/NotFound';
 import Channels from './pages/Channels';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -22,12 +25,20 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Login (standalone, no layout) */}
+          <Route path="/login" element={<Login />} />
+
           {/* Authenticated routes wrapped in AppLayout (sidebar + topbar) */}
           <Route element={<AppLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/about" element={<About />} />
             <Route path="/mcp-setup" element={<McpSetup />} />
+            <Route path="/profile" element={<ComingSoon title="Your Profile" description="Review and update your academic interests, goals, and personal information." />} />
+            <Route path="/plan" element={<ComingSoon title="Academic Plan" description="View your personalized 4-year course plan and make adjustments as your goals evolve." />} />
+            <Route path="/questionnaire" element={<ComingSoon title="Interest Questionnaire" description="Complete or revisit the questionnaire to refine your college and career recommendations." />} />
+            <Route path="/account" element={<ComingSoon title="Account Settings" description="Manage your account preferences and personal information." />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
 
           {/* Admin login (standalone, no layout) */}
