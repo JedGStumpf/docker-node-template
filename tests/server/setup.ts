@@ -5,3 +5,12 @@ process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://app:devpass
 // Initialize Prisma client so routes that use it (test-login, admin CRUD) work
 import { initPrisma } from '../../server/src/services/prisma';
 await initPrisma();
+
+// Global cleanup — remove all test users after all suites finish
+import { afterAll } from 'vitest';
+import { getTestPool, cleanupTestDb } from './helpers/db';
+
+afterAll(async () => {
+  const pool = getTestPool();
+  await cleanupTestDb(pool);
+});

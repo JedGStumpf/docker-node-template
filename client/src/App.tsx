@@ -18,6 +18,7 @@ import SessionViewer from './pages/admin/SessionViewer';
 import PermissionsPanel from './pages/admin/PermissionsPanel';
 import ScheduledJobsPanel from './pages/admin/ScheduledJobsPanel';
 import ImportExport from './pages/admin/ImportExport';
+import UsersPanel from './pages/admin/UsersPanel';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
 
           {/* Admin pages use their own AdminLayout (auth-gated) */}
           <Route element={<AdminLayout />}>
+            <Route path="/admin/users" element={<UsersPanel />} />
             <Route path="/admin/env" element={<EnvironmentInfo />} />
             <Route path="/admin/db" element={<DatabaseViewer />} />
             <Route path="/admin/config" element={<ConfigPanel />} />

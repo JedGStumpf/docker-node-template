@@ -17,19 +17,6 @@ const MAIN_NAV: NavItem[] = [
   { to: '/chat', label: 'Chat' },
 ];
 
-const ADMIN_NAV: NavItem[] = [
-  { to: '/admin', label: 'Users' },
-  { to: '/admin/env', label: 'Environment' },
-  { to: '/admin/config', label: 'Configuration' },
-  { to: '/admin/db', label: 'Database' },
-  { to: '/admin/logs', label: 'Logs' },
-  { to: '/admin/sessions', label: 'Sessions' },
-  { to: '/admin/permissions', label: 'Permissions' },
-  { to: '/admin/import-export', label: 'Import/Export' },
-  { to: '/admin/scheduler', label: 'Scheduled Jobs' },
-  { to: '/admin/channels', label: 'Channels' },
-];
-
 const BOTTOM_NAV: NavItem[] = [
   { to: '/mcp-setup', label: 'MCP Setup' },
   { to: '/about', label: 'About' },
@@ -219,7 +206,16 @@ export default function AppLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [appName, setAppName] = useState('Chat App');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch app name from health endpoint
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.appName) setAppName(data.appName); })
+      .catch(() => {});
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -269,7 +265,7 @@ export default function AppLayout() {
     <nav style={sidebarStyle}>
       {/* Logo */}
       <div style={styles.logo}>
-        Chat App
+        {appName}
       </div>
 
       {/* Main nav */}
@@ -286,23 +282,6 @@ export default function AppLayout() {
           </NavLink>
         ))}
 
-        {/* Admin section */}
-        {isAdmin && (
-          <>
-            <div style={styles.sectionLabel}>Admin</div>
-            {ADMIN_NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/admin'}
-                onClick={closeSidebarIfMobile}
-                style={({ isActive }) => styles.navLink(isActive)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </>
-        )}
       </div>
 
       {/* Bottom nav */}
@@ -317,6 +296,15 @@ export default function AppLayout() {
             {item.label}
           </NavLink>
         ))}
+        {isAdmin && (
+          <NavLink
+            to="/admin/users"
+            onClick={closeSidebarIfMobile}
+            style={({ isActive }) => styles.navLink(isActive)}
+          >
+            Admin
+          </NavLink>
+        )}
       </div>
     </nav>
   );
@@ -356,16 +344,6 @@ export default function AppLayout() {
           <div style={styles.dropdown}>
             <button
               style={styles.dropdownItem}
-              onClick={(e) => {
-                e.stopPropagation();
-                setDropdownOpen(false);
-                navigate('/account');
-              }}
-            >
-              Account
-            </button>
-            <button
-              style={{ ...styles.dropdownItem, borderTop: '1px solid #e2e8f0' }}
               onClick={(e) => {
                 e.stopPropagation();
                 void handleLogout();

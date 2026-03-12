@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const APP_NAME = 'Chat App';
+const FALLBACK_NAME = 'Chat App';
 const FALLBACK_VERSION = '0.1.0';
 
 export default function About() {
+  const [appName, setAppName] = useState<string>(FALLBACK_NAME);
   const [version, setVersion] = useState<string>(FALLBACK_VERSION);
 
   useEffect(() => {
     fetch('/api/health')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.version) {
-          setVersion(data.version);
-        }
+        if (data?.version) setVersion(data.version);
+        if (data?.appName) setAppName(data.appName);
       })
       .catch(() => {
-        // Keep fallback version
+        // Keep fallback values
       });
   }, []);
 
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>{APP_NAME}</h1>
+        <h1 style={styles.title}>{appName}</h1>
         <p style={styles.version}>Version {version}</p>
       </header>
 
