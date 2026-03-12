@@ -5,6 +5,8 @@ import fs from 'fs';
 
 // Load .env from project root when running locally (not in Docker).
 // In Docker, env vars are set by compose/entrypoint.
+// IMPORTANT: This must run BEFORE importing app modules, because auth.ts
+// registers OAuth strategies at import time based on process.env values.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, '../../.env');
@@ -12,18 +14,19 @@ if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
 }
 
-import app from './app';
-import { initPrisma } from './services/prisma';
-import { initConfigCache } from './services/config';
-import { ServiceRegistry } from './services/service.registry';
-import { prisma } from './services/prisma';
+// Dynamic imports — must come after dotenv.config() so env vars are
+// available when auth.ts evaluates its OAuth strategy guards.
+const { default: app } = await import('./app.js');
+const { initPrisma, prisma } = await import('./services/prisma.js');
+const { initConfigCache } = await import('./services/config.js');
+const { ServiceRegistry } = await import('./services/service.registry.js');
 
 const port = parseInt(process.env.PORT || '3000', 10);
 
 const registry = ServiceRegistry.create();
 
 initPrisma().then(() => initConfigCache()).then(async () => {
-  // Seed default #general channel (idempotent)
+  // Seed default general channel (idempotent)
   await prisma.channel.upsert({
     where: { name: 'general' },
     update: {},
