@@ -1,6 +1,10 @@
 ---
-title: "Channel name mismatch: server seeds '#general' but Chat expects 'general'"
+title: 'Channel name mismatch: server seeds ''#general'' but Chat expects ''general'''
 priority: medium
+status: done
+sprint: '010'
+tickets:
+- '006'
 ---
 
 ## Problem

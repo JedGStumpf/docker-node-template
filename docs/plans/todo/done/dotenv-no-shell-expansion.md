@@ -1,6 +1,10 @@
 ---
-title: "DATABASE_URL uses shell variable expansion that dotenv doesn't support"
+title: DATABASE_URL uses shell variable expansion that dotenv doesn't support
 priority: high
+status: done
+sprint: '010'
+tickets:
+- '005'
 ---
 
 ## Problem
