@@ -39,13 +39,10 @@ export default function Login() {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.logoRow}>
-          <span style={{ fontSize: 32 }} role="img" aria-label="graduation cap">
-            &#x1F393;
-          </span>
-          <h1 style={styles.title}>College App Navigator</h1>
+          <h1 style={styles.title}>Chat App</h1>
         </div>
         <p style={styles.subtitle}>
-          Sign in to access your personalized college application guide.
+          Sign in to get started.
         </p>
 
         <div style={styles.buttons}>

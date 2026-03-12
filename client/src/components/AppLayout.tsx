@@ -269,10 +269,7 @@ export default function AppLayout() {
     <nav style={sidebarStyle}>
       {/* Logo */}
       <div style={styles.logo}>
-        <span style={{ fontSize: 20 }} role="img" aria-label="graduation cap">
-          &#x1F393;
-        </span>
-        College App Navigator
+        Chat App
       </div>
 
       {/* Main nav */}

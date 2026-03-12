@@ -26,10 +26,10 @@ function renderAbout() {
 // ---- Tests ----
 
 describe('About', () => {
-  it('renders application name "College Application Navigator"', () => {
+  it('renders application name "Chat App"', () => {
     renderAbout();
     expect(
-      screen.getByRole('heading', { name: 'College Application Navigator' }),
+      screen.getByRole('heading', { name: 'Chat App' }),
     ).toBeInTheDocument();
   });
 
