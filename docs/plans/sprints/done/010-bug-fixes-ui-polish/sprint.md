@@ -1,7 +1,7 @@
 ---
-id: "010"
-title: "Bug Fixes & UI Polish"
-status: planning
+id: '010'
+title: Bug Fixes & UI Polish
+status: done
 branch: sprint/010-bug-fixes-ui-polish
 use-cases: []
 ---
