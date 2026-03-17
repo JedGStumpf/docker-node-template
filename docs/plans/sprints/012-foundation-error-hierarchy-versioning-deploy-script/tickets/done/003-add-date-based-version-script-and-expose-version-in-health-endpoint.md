@@ -1,8 +1,9 @@
 ---
-id: "003"
-title: "Add date-based version script and expose version in health endpoint"
-status: todo
-use-cases: [SUC-002]
+id: '003'
+title: Add date-based version script and expose version in health endpoint
+status: done
+use-cases:
+- SUC-002
 depends-on: []
 ---
 
