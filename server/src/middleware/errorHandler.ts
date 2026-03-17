@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ServiceError } from '../errors.js';
 
 export function errorHandler(
   err: Error,
@@ -6,8 +7,10 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ) {
-  console.error(err);
-  res.status(500).json({
-    error: err.message || 'Internal server error',
-  });
+  if (err instanceof ServiceError) {
+    res.status(err.statusCode).json({ error: err.message });
+    return;
+  }
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 }
