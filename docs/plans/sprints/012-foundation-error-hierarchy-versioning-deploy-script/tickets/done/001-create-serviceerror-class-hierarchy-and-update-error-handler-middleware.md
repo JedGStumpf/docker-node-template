@@ -1,8 +1,9 @@
 ---
-id: "001"
-title: "Create ServiceError class hierarchy and update error handler middleware"
-status: todo
-use-cases: [SUC-001]
+id: '001'
+title: Create ServiceError class hierarchy and update error handler middleware
+status: done
+use-cases:
+- SUC-001
 depends-on: []
 ---
 
