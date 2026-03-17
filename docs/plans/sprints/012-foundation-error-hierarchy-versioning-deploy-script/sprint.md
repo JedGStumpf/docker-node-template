@@ -1,7 +1,7 @@
 ---
 id: "012"
 title: "Foundation: Error Hierarchy, Versioning & Deploy Script"
-status: planning
+status: active
 branch: sprint/012-foundation-error-hierarchy-versioning-deploy-script
 use-cases: [SUC-001, SUC-002, SUC-003]
 ---
@@ -83,9 +83,13 @@ git tags, and a deploy script with pre-flight validation.
 Before tickets can be created, all of the following must be true:
 
 - [x] Sprint planning documents are complete (sprint.md, use cases, architecture)
-- [ ] Architecture review passed
-- [ ] Stakeholder has approved the sprint plan
+- [x] Architecture review passed
+- [x] Stakeholder has approved the sprint plan
 
 ## Tickets
 
-(To be created after sprint approval.)
+1. #001 — Create ServiceError class hierarchy and update error handler middleware
+2. #002 — Migrate existing services to throw typed ServiceErrors
+3. #003 — Add date-based version script and expose version in health endpoint
+4. #004 — Create deploy script with pre-flight checks
+5. #005 — Write tests for error hierarchy, version script, and deploy pre-flights
