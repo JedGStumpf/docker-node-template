@@ -1,9 +1,16 @@
 ---
-id: "005"
-title: "Write tests for error hierarchy, version script, and deploy pre-flights"
-status: todo
-use-cases: [SUC-001, SUC-002, SUC-003]
-depends-on: ["001", "002", "003", "004"]
+id: '005'
+title: Write tests for error hierarchy, version script, and deploy pre-flights
+status: done
+use-cases:
+- SUC-001
+- SUC-002
+- SUC-003
+depends-on:
+- '001'
+- '002'
+- '003'
+- '004'
 ---
 
 # Write tests for error hierarchy, version script, and deploy pre-flights
