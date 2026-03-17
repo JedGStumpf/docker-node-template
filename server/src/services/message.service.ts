@@ -1,3 +1,5 @@
+import { NotFoundError } from '../errors.js';
+
 export class MessageService {
   private prisma: any;
 
@@ -32,12 +34,14 @@ export class MessageService {
   }
 
   async getById(id: number) {
-    return this.prisma.message.findUnique({
+    const message = await this.prisma.message.findUnique({
       where: { id },
       include: {
         author: { select: { id: true, displayName: true, email: true, avatarUrl: true } },
       },
     });
+    if (!message) throw new NotFoundError(`Message ${id} not found`);
+    return message;
   }
 
   async delete(id: number) {

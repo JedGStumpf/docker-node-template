@@ -1,3 +1,5 @@
+import { NotFoundError } from '../errors.js';
+
 export class ChannelService {
   private prisma: any;
 
@@ -33,7 +35,7 @@ export class ChannelService {
       }),
     ]);
 
-    if (!channel) return null;
+    if (!channel) throw new NotFoundError(`Channel ${id} not found`);
 
     return { ...channel, messages: messages.reverse() };
   }
