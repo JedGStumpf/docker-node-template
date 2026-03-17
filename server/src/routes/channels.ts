@@ -43,9 +43,6 @@ channelsRouter.get('/channels/:id', requireAuth, async (req, res, next) => {
     const before = req.query.before ? parseInt(req.query.before as string, 10) : undefined;
 
     const channel = await req.services.channels.get(id, { limit, before });
-    if (!channel) {
-      return res.status(404).json({ error: 'Channel not found' });
-    }
     res.json(channel);
   } catch (err) {
     next(err);

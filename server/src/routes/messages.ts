@@ -12,10 +12,6 @@ messagesRouter.delete('/messages/:id', requireAuth, async (req, res, next) => {
     }
 
     const message = await req.services.messages.getById(id);
-    if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
-
     const user = req.user as any;
     const isAuthor = message.authorId === user.id;
     const isAdmin = user.role === 'ADMIN';

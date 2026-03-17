@@ -1,3 +1,5 @@
+import { ValidationError } from '../errors.js';
+
 const VALID_MATCH_TYPES = ['exact', 'regex'] as const;
 const VALID_ROLES = ['USER', 'ADMIN'] as const;
 const MAX_REGEX_LENGTH = 500;
@@ -87,25 +89,25 @@ export class PermissionsService {
 
   private validateMatchType(matchType: string): void {
     if (!(VALID_MATCH_TYPES as readonly string[]).includes(matchType)) {
-      throw new Error(`Invalid matchType: "${matchType}". Must be "exact" or "regex".`);
+      throw new ValidationError(`Invalid matchType: "${matchType}". Must be "exact" or "regex".`);
     }
   }
 
   private validateRole(role: string): void {
     if (!(VALID_ROLES as readonly string[]).includes(role)) {
-      throw new Error(`Invalid role: "${role}". Must be "USER" or "ADMIN".`);
+      throw new ValidationError(`Invalid role: "${role}". Must be "USER" or "ADMIN".`);
     }
   }
 
   private validatePattern(matchType: string, pattern: string): void {
     if (matchType === 'regex') {
       if (pattern.length > MAX_REGEX_LENGTH) {
-        throw new Error(`Regex pattern exceeds maximum length of ${MAX_REGEX_LENGTH} characters.`);
+        throw new ValidationError(`Regex pattern exceeds maximum length of ${MAX_REGEX_LENGTH} characters.`);
       }
       try {
         new RegExp(pattern);
       } catch {
-        throw new Error(`Invalid regex pattern: "${pattern}".`);
+        throw new ValidationError(`Invalid regex pattern: "${pattern}".`);
       }
     }
   }

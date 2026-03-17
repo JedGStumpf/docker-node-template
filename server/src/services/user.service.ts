@@ -1,3 +1,5 @@
+import { NotFoundError } from '../errors.js';
+
 export class UserService {
   private prisma: any;
 
@@ -10,7 +12,9 @@ export class UserService {
   }
 
   async getById(id: number) {
-    return this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundError(`User ${id} not found`);
+    return user;
   }
 
   async getByEmail(email: string) {
