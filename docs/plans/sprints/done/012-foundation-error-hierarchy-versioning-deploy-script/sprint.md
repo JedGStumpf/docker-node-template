@@ -1,9 +1,12 @@
 ---
-id: "012"
-title: "Foundation: Error Hierarchy, Versioning & Deploy Script"
-status: active
+id: '012'
+title: 'Foundation: Error Hierarchy, Versioning & Deploy Script'
+status: done
 branch: sprint/012-foundation-error-hierarchy-versioning-deploy-script
-use-cases: [SUC-001, SUC-002, SUC-003]
+use-cases:
+- SUC-001
+- SUC-002
+- SUC-003
 ---
 
 # Sprint 012: Foundation: Error Hierarchy, Versioning & Deploy Script
