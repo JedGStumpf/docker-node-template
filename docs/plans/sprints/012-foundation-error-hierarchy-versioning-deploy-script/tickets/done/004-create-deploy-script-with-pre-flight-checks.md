@@ -1,9 +1,11 @@
 ---
-id: "004"
-title: "Create deploy script with pre-flight checks"
-status: todo
-use-cases: [SUC-003]
-depends-on: ["003"]
+id: '004'
+title: Create deploy script with pre-flight checks
+status: done
+use-cases:
+- SUC-003
+depends-on:
+- '003'
 ---
 
 # Create deploy script with pre-flight checks
