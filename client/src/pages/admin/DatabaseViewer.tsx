@@ -34,7 +34,13 @@ function CellValue({ value }: { value: unknown }) {
   return <>{String(value)}</>;
 }
 
+interface DbInfo {
+  provider: string;
+  connectionString: string;
+}
+
 export default function DatabaseViewer() {
+  const [dbInfo, setDbInfo] = useState<DbInfo | null>(null);
   const [tables, setTables] = useState<TableMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [tableData, setTableData] = useState<TableData | null>(null);
@@ -43,6 +49,10 @@ export default function DatabaseViewer() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    fetch('/api/admin/db/info')
+      .then((r) => r.json())
+      .then(setDbInfo)
+      .catch(() => {});
     fetch('/api/admin/db/tables')
       .then((r) => r.json())
       .then(setTables)
@@ -65,6 +75,16 @@ export default function DatabaseViewer() {
   return (
     <div>
       <h1>Database</h1>
+
+      {dbInfo && (
+        <div style={{ marginBottom: 20, padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }}>
+          <span style={{ color: '#64748b' }}>Provider:</span>{' '}
+          <strong>{dbInfo.provider}</strong>
+          <span style={{ margin: '0 12px', color: '#cbd5e1' }}>|</span>
+          <span style={{ color: '#64748b' }}>Connection:</span>{' '}
+          <code style={{ fontSize: 12 }}>{dbInfo.connectionString}</code>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 24 }}>
         {/* Table list */}

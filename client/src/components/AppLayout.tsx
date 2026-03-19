@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { hasAdminAccess, roleShortLabel, roleBadgeStyle } from '../lib/roles';
 
@@ -10,11 +10,25 @@ import { hasAdminAccess, roleShortLabel, roleBadgeStyle } from '../lib/roles';
 interface NavItem {
   to: string;
   label: string;
+  end?: boolean;
 }
 
 const MAIN_NAV: NavItem[] = [
-  { to: '/', label: 'Home' },
+  { to: '/', label: 'Home', end: true },
   { to: '/chat', label: 'Chat' },
+];
+
+const ADMIN_NAV: NavItem[] = [
+  { to: '/admin/users', label: 'Users' },
+  { to: '/admin/channels', label: 'Channels' },
+  { to: '/admin/env', label: 'Environment' },
+  { to: '/admin/db', label: 'Database' },
+  { to: '/admin/config', label: 'Configuration' },
+  { to: '/admin/logs', label: 'Logs' },
+  { to: '/admin/sessions', label: 'Sessions' },
+  { to: '/admin/permissions', label: 'Permissions' },
+  { to: '/admin/scheduler', label: 'Scheduled Jobs' },
+  { to: '/admin/import-export', label: 'Import/Export' },
 ];
 
 const BOTTOM_NAV: NavItem[] = [
@@ -72,15 +86,6 @@ const styles = {
     alignItems: 'center',
     gap: 8,
     borderBottom: '1px solid #2a2a4e',
-  } as const,
-
-  sectionLabel: {
-    padding: '14px 16px 4px',
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    color: '#666',
-    letterSpacing: '0.05em',
   } as const,
 
   navLink: (isActive: boolean) =>
@@ -222,7 +227,10 @@ function useIsMobile() {
 export default function AppLayout() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
+
+  const isAdminSection = location.pathname.startsWith('/admin/');
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -277,6 +285,8 @@ export default function AppLayout() {
 
   /* ---------- Sidebar ---------- */
 
+  const primaryNav = isAdminSection ? ADMIN_NAV : MAIN_NAV;
+
   const sidebarStyle = isMobile
     ? styles.sidebar(sidebarOpen)
     : { ...styles.sidebar(true), ...styles.sidebarDesktop };
@@ -285,23 +295,40 @@ export default function AppLayout() {
     <nav style={sidebarStyle}>
       {/* Logo */}
       <div style={styles.logo}>
-        {appName}
+        {isAdminSection ? 'Admin' : appName}
       </div>
 
-      {/* Main nav */}
+      {/* Mode switch link */}
+      {isAdminSection ? (
+        <NavLink
+          to="/"
+          onClick={closeSidebarIfMobile}
+          style={{
+            display: 'block',
+            padding: '9px 16px',
+            color: '#aaa',
+            textDecoration: 'none',
+            fontSize: 14,
+            borderBottom: '1px solid #2a2a4e',
+          }}
+        >
+          &larr; Back to App
+        </NavLink>
+      ) : null}
+
+      {/* Primary nav */}
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: 8 }}>
-        {MAIN_NAV.map((item) => (
+        {primaryNav.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === '/'}
+            end={item.end}
             onClick={closeSidebarIfMobile}
             style={({ isActive }) => styles.navLink(isActive)}
           >
             {item.label}
           </NavLink>
         ))}
-
       </div>
 
       {/* Bottom nav */}
@@ -316,7 +343,7 @@ export default function AppLayout() {
             {item.label}
           </NavLink>
         ))}
-        {isAdmin && (
+        {isAdmin && !isAdminSection && (
           <NavLink
             to="/admin/users"
             onClick={closeSidebarIfMobile}

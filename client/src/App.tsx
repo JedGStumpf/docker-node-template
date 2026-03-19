@@ -29,31 +29,32 @@ function App() {
           {/* Login (standalone, no layout) */}
           <Route path="/login" element={<Login />} />
 
-          {/* Authenticated routes wrapped in AppLayout (sidebar + topbar) */}
+          {/* Admin login (standalone, no layout) */}
+          <Route path="/admin" element={<AdminLogin />} />
+
+          {/* All authenticated routes share AppLayout (sidebar + topbar) */}
           <Route element={<AppLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/about" element={<About />} />
             <Route path="/account" element={<Account />} />
             <Route path="/mcp-setup" element={<McpSetup />} />
+
+            {/* Admin pages — auth-gated by AdminLayout */}
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/users" element={<UsersPanel />} />
+              <Route path="/admin/env" element={<EnvironmentInfo />} />
+              <Route path="/admin/db" element={<DatabaseViewer />} />
+              <Route path="/admin/config" element={<ConfigPanel />} />
+              <Route path="/admin/logs" element={<LogViewer />} />
+              <Route path="/admin/sessions" element={<SessionViewer />} />
+              <Route path="/admin/permissions" element={<PermissionsPanel />} />
+              <Route path="/admin/scheduler" element={<ScheduledJobsPanel />} />
+              <Route path="/admin/import-export" element={<ImportExport />} />
+              <Route path="/admin/channels" element={<Channels />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
-          </Route>
-
-          {/* Admin login (standalone, no layout) */}
-          <Route path="/admin" element={<AdminLogin />} />
-
-          {/* Admin pages use their own AdminLayout (auth-gated) */}
-          <Route element={<AdminLayout />}>
-            <Route path="/admin/users" element={<UsersPanel />} />
-            <Route path="/admin/env" element={<EnvironmentInfo />} />
-            <Route path="/admin/db" element={<DatabaseViewer />} />
-            <Route path="/admin/config" element={<ConfigPanel />} />
-            <Route path="/admin/logs" element={<LogViewer />} />
-            <Route path="/admin/sessions" element={<SessionViewer />} />
-            <Route path="/admin/permissions" element={<PermissionsPanel />} />
-            <Route path="/admin/scheduler" element={<ScheduledJobsPanel />} />
-            <Route path="/admin/import-export" element={<ImportExport />} />
-            <Route path="/admin/channels" element={<Channels />} />
           </Route>
         </Routes>
       </AuthProvider>
