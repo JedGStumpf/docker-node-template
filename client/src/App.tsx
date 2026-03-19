@@ -7,6 +7,7 @@ import Chat from './pages/Chat';
 import About from './pages/About';
 import McpSetup from './pages/McpSetup';
 import NotFound from './pages/NotFound';
+import Account from './pages/Account';
 import Channels from './pages/Channels';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -33,6 +34,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/about" element={<About />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/mcp-setup" element={<McpSetup />} />
             <Route path="*" element={<NotFound />} />
           </Route>

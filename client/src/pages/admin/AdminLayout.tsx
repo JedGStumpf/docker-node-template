@@ -28,11 +28,6 @@ export default function AdminLayout() {
       .finally(() => setChecking(false));
   }, [navigate]);
 
-  async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    navigate('/admin', { replace: true });
-  }
-
   if (checking) return null;
 
   return (
@@ -79,21 +74,6 @@ export default function AdminLayout() {
             {item.label}
           </NavLink>
         ))}
-        <div style={{ marginTop: 'auto', padding: '16px' }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              padding: '8px',
-              background: 'transparent',
-              color: '#aaa',
-              border: '1px solid #444',
-              cursor: 'pointer',
-            }}
-          >
-            Logout
-          </button>
-        </div>
       </nav>
       <main style={{ flex: 1, padding: 24, minWidth: 0, overflow: 'auto' }}>
         <Outlet />

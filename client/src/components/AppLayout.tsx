@@ -119,7 +119,6 @@ const styles = {
 
   userArea: {
     position: 'relative' as const,
-    marginLeft: 'auto',
     display: 'flex',
     alignItems: 'center',
     gap: 8,
@@ -127,6 +126,27 @@ const styles = {
     padding: '4px 8px',
     borderRadius: 6,
     userSelect: 'none' as const,
+  } as const,
+
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    objectFit: 'cover' as const,
+  } as const,
+
+  avatarFallback: {
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    background: '#4f46e5',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 13,
+    fontWeight: 600,
+    flexShrink: 0,
   } as const,
 
   roleBadge: (bg: string, fg: string) =>
@@ -313,6 +333,8 @@ export default function AppLayout() {
 
   const topbarLeftOffset = isMobile ? 0 : SIDEBAR_WIDTH;
 
+  const avatarInitial = displayName.charAt(0).toUpperCase();
+
   const topbar = (
     <header style={{ ...styles.topbar, left: topbarLeftOffset }}>
       {isMobile && (
@@ -327,13 +349,22 @@ export default function AppLayout() {
 
       <div style={{ flex: 1 }} />
 
-      {/* User area with dropdown */}
+      {/* User area — upper right */}
       <div
         ref={dropdownRef}
         style={styles.userArea}
-        onClick={() => setDropdownOpen((v) => !v)}
+        onMouseEnter={() => setDropdownOpen(true)}
+        onMouseLeave={() => setDropdownOpen(false)}
       >
-        <span style={{ fontSize: 14, fontWeight: 500, color: '#333' }}>
+        {user.avatarUrl ? (
+          <img src={user.avatarUrl} alt={displayName} style={styles.avatar} />
+        ) : (
+          <div style={styles.avatarFallback}>{avatarInitial}</div>
+        )}
+        <span
+          style={{ fontSize: 14, fontWeight: 500, color: '#4f46e5', cursor: 'pointer' }}
+          onClick={(e) => { e.stopPropagation(); navigate('/account'); }}
+        >
           {displayName}
         </span>
         <span style={styles.roleBadge(badge.background, badge.color)}>
@@ -346,10 +377,20 @@ export default function AppLayout() {
               style={styles.dropdownItem}
               onClick={(e) => {
                 e.stopPropagation();
+                setDropdownOpen(false);
+                navigate('/account');
+              }}
+            >
+              Account
+            </button>
+            <button
+              style={{ ...styles.dropdownItem, borderTop: '1px solid #e2e8f0' }}
+              onClick={(e) => {
+                e.stopPropagation();
                 void handleLogout();
               }}
             >
-              Logout
+              Log out
             </button>
           </div>
         )}

@@ -10,7 +10,9 @@ async function getPrismaClient() {
   if (!_prisma) {
     const { PrismaClient } = await import('../generated/prisma/client');
     if (isSqlite()) {
-      _prisma = new PrismaClient();
+      const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
+      const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! });
+      _prisma = new PrismaClient({ adapter });
     } else {
       const { PrismaPg } = await import('@prisma/adapter-pg');
       const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
