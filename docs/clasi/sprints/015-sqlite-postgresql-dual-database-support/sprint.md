@@ -1,7 +1,7 @@
 ---
 id: "015"
 title: "SQLite + PostgreSQL Dual Database Support"
-status: planning
+status: active
 branch: sprint/015-sqlite-postgresql-dual-database-support
 use-cases: [SUC-001, SUC-002, SUC-003, SUC-004]
 ---
@@ -82,9 +82,15 @@ backup service, and the Prisma client initialization.
 ## Definition of Ready
 
 - [x] Sprint planning documents are complete
-- [ ] Architecture review passed
-- [ ] Stakeholder has approved the sprint plan
+- [x] Architecture review passed
+- [x] Stakeholder has approved the sprint plan
 
 ## Tickets
 
-(To be created after sprint approval.)
+1. #001 — Dual-provider Prisma schema and branching client initialization
+2. #002 — Replace connect-pg-simple with PrismaSessionStore
+3. #003 — Rewrite SessionService raw SQL to Prisma ORM
+4. #004 — Branch SchedulerService tick for SQLite compatibility
+5. #005 — Create DbIntrospector and update admin DB viewer
+6. #006 — Add SQLite support to BackupService
+7. #007 — Update dev scripts and wait-for-db for SQLite mode
