@@ -1,22 +1,41 @@
 # Docker Node Application Template
 
-This is a template repo for building new  webb applications with AI and deploying them to 
-Docker. 
+This is a template repo for building new web applications with AI and deploying them to
+Docker.
 
 **MANDATORY: Before doing ANY work that involves code or planning on code, you MUST call `get_se_overview()` to load the software engineering process. Do this at the start of every conversation. No exceptions.**
 
+## External Tools
+
+This project uses external CLI tools for configuration and database
+management. **Their agent instructions are canonical** — when in doubt,
+run the agent command to get up-to-date instructions rather than relying
+solely on the docs in this repo.
+
+| Tool | Purpose | Agent instructions |
+|------|---------|-------------------|
+| **dotconfig** | Secrets & `.env` configuration (SOPS + age encryption, layered env files) | `dotconfig agent` |
+| **rundbat** | Dev/prod database lifecycle (Docker Postgres containers, credentials) | `rundbat mcp --help` |
+| **clasi** | SE process management (sprints, tickets, architecture) | `get_se_overview()` MCP tool |
+
+When working with secrets or `.env` files, follow `dotconfig agent`
+instructions. When working with database containers or connection
+strings, use the `rundbat` MCP tools (available via `.mcp.json`).
+The docs below provide project-specific context but **must not conflict**
+with the tool instructions above — if they do, the tool instructions win.
+
 ## Key Documentation
 
-Refer to these docs before performing setup, deployment, secrets, or
-integration work. They are the single source of truth — do not improvise
-procedures that are already documented here.
+Refer to these docs for project-specific context. For procedures
+involving secrets or database management, also consult the external tool
+instructions listed above.
 
 | Guide | When to consult |
 |-------|-----------------|
 | [docs/setup.md](docs/setup.md) | First-time checkout, running the install script, starting the dev server, running tests |
 | [docs/template-spec.md](docs/template-spec.md) | Technology decisions, project structure, backend/frontend/database conventions, Docker architecture |
 | [docs/deployment.md](docs/deployment.md) | Production builds, Swarm deployment, rolling updates, rollback |
-| [docs/secrets.md](docs/secrets.md) | SOPS + age setup, onboarding new developers, adding/rotating secrets, Swarm secret loading |
+| [docs/secrets.md](docs/secrets.md) | Project-specific secrets inventory and onboarding (procedures defer to `dotconfig agent`) |
 | [docs/api-integrations.md](docs/api-integrations.md) | GitHub OAuth, Google OAuth, Pike 13 API — setup, endpoints, callback URLs |
 | [docs/testing.md](docs/testing.md) | Test strategy, auth bypass for tests, server/client/E2E conventions, agent test guidelines |
 
