@@ -1,9 +1,13 @@
 ---
-id: "015"
-title: "SQLite + PostgreSQL Dual Database Support"
-status: active
+id: '015'
+title: SQLite + PostgreSQL Dual Database Support
+status: done
 branch: sprint/015-sqlite-postgresql-dual-database-support
-use-cases: [SUC-001, SUC-002, SUC-003, SUC-004]
+use-cases:
+- SUC-001
+- SUC-002
+- SUC-003
+- SUC-004
 ---
 
 # Sprint 015: SQLite + PostgreSQL Dual Database Support
