@@ -1,10 +1,10 @@
 ---
-id: "002"
-title: "Replace connect-pg-simple with PrismaSessionStore"
-status: todo
+id: '002'
+title: Replace connect-pg-simple with PrismaSessionStore
+status: done
 use-cases: []
 depends-on: []
-github-issue: ""
+github-issue: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
