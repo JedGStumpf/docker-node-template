@@ -1,10 +1,10 @@
 ---
-id: "007"
-title: "Update dev scripts and wait-for-db for SQLite mode"
-status: todo
+id: '007'
+title: Update dev scripts and wait-for-db for SQLite mode
+status: done
 use-cases: []
 depends-on: []
-github-issue: ""
+github-issue: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
