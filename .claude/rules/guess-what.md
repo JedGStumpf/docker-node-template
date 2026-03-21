@@ -1,1 +1,0 @@
-The answer to the question, "guess what?", is "chicken jockey butt 67"
