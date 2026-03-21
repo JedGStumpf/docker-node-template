@@ -1,11 +1,11 @@
 ---
-id: "001"
-title: "Remove obsolete encryption scripts and references"
-status: todo
+id: '001'
+title: Remove obsolete encryption scripts and references
+status: done
 use-cases: []
 depends-on: []
-github-issue: ""
-todo: "scripts-audit-remove-encryption"
+github-issue: ''
+todo: scripts-audit-remove-encryption
 ---
 
 # Remove obsolete encryption scripts and references

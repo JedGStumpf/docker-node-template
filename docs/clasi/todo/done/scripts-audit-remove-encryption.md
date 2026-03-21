@@ -1,7 +1,11 @@
 ---
-title: "Audit Scripts: Remove Obsolete Encryption Scripts"
+title: 'Audit Scripts: Remove Obsolete Encryption Scripts'
 type: todo
 priority: medium
+status: done
+sprint: '016'
+tickets:
+- '001'
 ---
 
 # Audit Scripts: Remove Obsolete Encryption Scripts
