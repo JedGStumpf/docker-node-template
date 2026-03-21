@@ -1,7 +1,11 @@
 ---
-title: "Update README: Focus on Getting Started"
+title: 'Update README: Focus on Getting Started'
 type: todo
 priority: high
+status: done
+sprint: '016'
+tickets:
+- '004'
 ---
 
 # Update README: Focus on Getting Started

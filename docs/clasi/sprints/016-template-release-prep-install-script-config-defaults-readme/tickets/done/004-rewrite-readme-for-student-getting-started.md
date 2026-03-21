@@ -1,11 +1,16 @@
 ---
-id: "004"
-title: "Rewrite README for student getting-started"
-status: todo
-use-cases: ["SUC-001", "SUC-002"]
-depends-on: ["001", "002", "003"]
-github-issue: ""
-todo: "readme-update"
+id: '004'
+title: Rewrite README for student getting-started
+status: done
+use-cases:
+- SUC-001
+- SUC-002
+depends-on:
+- '001'
+- '002'
+- '003'
+github-issue: ''
+todo: readme-update
 ---
 
 # Rewrite README for student getting-started
