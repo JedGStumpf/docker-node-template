@@ -57,12 +57,9 @@ DEV_CONTEXT="default"
 PROD_CONTEXT="swarm1"
 
 if ! command -v docker &>/dev/null; then
-  err "Docker is not installed"
-  detail "This project requires Docker to run the database (and optionally"
-  detail "the full stack). Install Docker Desktop, OrbStack, or the Docker"
-  detail "Engine before running 'npm run dev'."
-  echo ""
-  detail "https://docs.docker.com/get-docker/"
+  info "Docker is not installed (optional — SQLite mode works without it)"
+  detail "To use PostgreSQL later, install Docker Desktop or OrbStack:"
+  detail "  https://docs.docker.com/get-docker/"
 else
   available_contexts=$(docker context ls --format '{{.Name}}' 2>/dev/null || true)
 
@@ -78,219 +75,36 @@ else
     PROD_CONTEXT="swarm1"
     success "Prod context: ${BOLD}$PROD_CONTEXT${RESET}"
   else
-    warn "No ${BOLD}swarm1${RESET} Docker context found"
-    detail "Production deployment won't work until you create a remote context:"
-    detail "  docker context create swarm1 --docker 'host=ssh://user@your-swarm-host'"
-    detail "Then update PROD_DOCKER_CONTEXT in .env"
+    detail "No ${BOLD}swarm1${RESET} context found (needed for production deployment only)"
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Check for SOPS and age
+# 3. Reset CLASI project (clear template development history)
 # ---------------------------------------------------------------------------
-header "Secrets Tooling"
+header "Project Initialization"
 
-HAS_SOPS_AGE=true
-missing_tools=()
+CLASI_DIR="docs/clasi"
 
-if ! command -v sops &>/dev/null; then
-  missing_tools+=("sops")
-fi
+if [ -d "$CLASI_DIR/sprints/done" ] && [ "$(ls -A "$CLASI_DIR/sprints/done" 2>/dev/null)" ]; then
+  info "Clearing template development history..."
 
-if ! command -v age &>/dev/null; then
-  missing_tools+=("age")
-fi
+  # Remove completed sprints, TODOs, reflections, architecture snapshots
+  rm -rf "$CLASI_DIR/sprints/done"/*
+  rm -rf "$CLASI_DIR/todo/done"/*
+  rm -rf "$CLASI_DIR/todo/for-later"/*
+  rm -f  "$CLASI_DIR/todo"/*.md
+  rm -rf "$CLASI_DIR/reflections"/*
+  rm -rf "$CLASI_DIR/architecture/done"/*
+  rm -f  "$CLASI_DIR/.clasi.db"
 
-if [ ${#missing_tools[@]} -gt 0 ]; then
-  HAS_SOPS_AGE=false
-  err "Missing: ${BOLD}${missing_tools[*]}${RESET}"
-  detail "This project uses SOPS + age to encrypt secrets at rest."
-  detail "Install them before working with secrets:"
-  echo ""
-  bullet "macOS:    ${CYAN}brew install sops age${RESET}"
-  bullet "Linux:    ${CYAN}https://github.com/getsops/sops/releases${RESET}"
-  detail "          ${CYAN}https://github.com/FiloSottile/age/releases${RESET}"
-  bullet "Windows:  ${CYAN}winget install Mozilla.SOPS FiloSottile.age${RESET}  (or use WSL)"
+  success "Template history cleared"
 else
-  success "sops found"
-  success "age found"
+  success "Project already clean"
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Locate or create age key
-# ---------------------------------------------------------------------------
-AGE_KEY=""
-AGE_KEY_FILE=""
-SOPS_LINE=""
-
-if [ "$HAS_SOPS_AGE" = true ]; then
-  header "Age Key"
-
-  # Check SOPS_AGE_KEY env var (inline key)
-  if [ -n "${SOPS_AGE_KEY:-}" ]; then
-    AGE_KEY="$SOPS_AGE_KEY"
-    success "Found age key in ${BOLD}SOPS_AGE_KEY${RESET} env var"
-    # Already in env — write commented out for visibility
-    SOPS_LINE="# SOPS_AGE_KEY is set in the environment"
-
-  # Check SOPS_AGE_KEY_FILE env var (path to key file)
-  elif [ -n "${SOPS_AGE_KEY_FILE:-}" ] && [ -f "${SOPS_AGE_KEY_FILE}" ]; then
-    AGE_KEY=$(grep -o "AGE-SECRET-KEY-[A-Za-z0-9]*" "$SOPS_AGE_KEY_FILE" | head -1)
-    AGE_KEY_FILE="$SOPS_AGE_KEY_FILE"
-    success "Found age key via ${BOLD}SOPS_AGE_KEY_FILE${RESET} ($SOPS_AGE_KEY_FILE)"
-    # Already in env — write commented out for visibility
-    SOPS_LINE="# SOPS_AGE_KEY_FILE=$SOPS_AGE_KEY_FILE (set in environment)"
-
-  # Check default age key file
-  elif [ -f "$HOME/.config/sops/age/keys.txt" ]; then
-    AGE_KEY=$(grep -o "AGE-SECRET-KEY-[A-Za-z0-9]*" "$HOME/.config/sops/age/keys.txt" | head -1)
-    AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
-    success "Found age key in ${BOLD}~/.config/sops/age/keys.txt${RESET}"
-    SOPS_LINE="SOPS_AGE_KEY_FILE=$AGE_KEY_FILE"
-  fi
-
-  if [ -z "$AGE_KEY" ]; then
-    echo ""
-    echo "  ${YELLOW}${BOLD}No age key found${RESET}"
-    echo ""
-    detail "Searched:"
-    detail "  SOPS_AGE_KEY env var"
-    detail "  SOPS_AGE_KEY_FILE env var"
-    detail "  ~/.config/sops/age/keys.txt"
-    echo ""
-    echo "  ${BOLD}What would you like to do?${RESET}"
-    echo ""
-    echo "  ${CYAN}1${RESET}) Generate a new age keypair"
-    echo "  ${CYAN}2${RESET}) Paste an existing age secret key"
-    echo "  ${CYAN}3${RESET}) Skip — I'll set up my key later"
-    echo ""
-
-    while true; do
-      read -rp "  ${BOLD}Choose [1/2/3]:${RESET} " age_choice
-      case "$age_choice" in
-        1)
-          info "Generating a new age keypair..."
-          mkdir -p "$HOME/.config/sops/age"
-
-          keygen_output=$(age-keygen 2>&1)
-          echo "$keygen_output" > "$HOME/.config/sops/age/keys.txt"
-          chmod 600 "$HOME/.config/sops/age/keys.txt"
-
-          AGE_KEY=$(echo "$keygen_output" | grep -o "AGE-SECRET-KEY-[A-Za-z0-9]*" | head -1)
-          AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
-          SOPS_LINE="SOPS_AGE_KEY_FILE=$AGE_KEY_FILE"
-
-          echo ""
-          echo "  ${GREEN}${BOLD}┌──────────────────────────────────────┐${RESET}"
-          echo "  ${GREEN}${BOLD}│       NEW AGE KEYPAIR GENERATED      │${RESET}"
-          echo "  ${GREEN}${BOLD}└──────────────────────────────────────┘${RESET}"
-          echo ""
-          detail "Key file: ~/.config/sops/age/keys.txt"
-          echo ""
-          echo "  ${DIM}┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄${RESET}"
-          sed "s/^/  ${CYAN}/" "$HOME/.config/sops/age/keys.txt"
-          echo "${RESET}"
-          echo "  ${DIM}┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄${RESET}"
-
-          if [ "${CODESPACES:-}" = "true" ]; then
-            echo ""
-            echo "  ${RED}${BOLD}!! CODESPACES — THIS KEY IS EPHEMERAL !!${RESET}"
-            echo "  ${RED}It will be LOST when your Codespace is deleted.${RESET}"
-            echo "  Save it as a GitHub Codespaces secret:"
-            echo ""
-            bullet "Go to: ${CYAN}https://github.com/settings/codespaces${RESET}"
-            bullet "Click ${BOLD}New secret${RESET}"
-            bullet "Name:  ${BOLD}AGE_PRIVATE_KEY${RESET}"
-            bullet "Value: paste the ${BOLD}FULL${RESET} contents shown above"
-            detail "  (including the comment lines and the AGE-SECRET-KEY-... line)"
-            bullet "Under ${BOLD}Repository access${RESET}, authorize this repository"
-            echo ""
-            detail "The devcontainer will install it automatically on future Codespaces."
-          else
-            echo ""
-            success "Key saved at ${BOLD}~/.config/sops/age/keys.txt${RESET}"
-            detail "It will be found automatically on future runs."
-          fi
-          break
-          ;;
-        2)
-          echo ""
-          echo "  Paste your age secret key (starts with ${CYAN}AGE-SECRET-KEY-...${RESET}):"
-          read -rp "  ${BOLD}>${RESET} " pasted_key
-
-          if [[ "$pasted_key" != AGE-SECRET-KEY-* ]]; then
-            echo ""
-            err "That doesn't look like an age secret key."
-            detail "It should start with AGE-SECRET-KEY-"
-            echo ""
-            continue
-          fi
-
-          AGE_KEY="$pasted_key"
-
-          mkdir -p "$HOME/.config/sops/age"
-          pasted_public=$(echo "$pasted_key" | age-keygen -y 2>/dev/null || true)
-          {
-            echo "# created: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            [ -n "$pasted_public" ] && echo "# public key: $pasted_public"
-            echo "$pasted_key"
-          } > "$HOME/.config/sops/age/keys.txt"
-          chmod 600 "$HOME/.config/sops/age/keys.txt"
-
-          AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
-          SOPS_LINE="SOPS_AGE_KEY_FILE=$AGE_KEY_FILE"
-          success "Key saved to ${BOLD}~/.config/sops/age/keys.txt${RESET}"
-          break
-          ;;
-        3)
-          echo ""
-          info "Skipping age key setup"
-          detail "To set up later, see docs/secrets.md"
-          break
-          ;;
-        *)
-          err "Please enter 1, 2, or 3."
-          ;;
-      esac
-    done
-  fi
-
-  # -------------------------------------------------------------------------
-  # 5. Ensure public key is in .sops.yaml
-  # -------------------------------------------------------------------------
-  if [ -n "$AGE_KEY" ]; then
-    header "SOPS Configuration"
-
-    AGE_PUBLIC_KEY=$(echo "$AGE_KEY" | age-keygen -y 2>/dev/null || true)
-
-    if [ -z "$AGE_PUBLIC_KEY" ]; then
-      warn "Could not derive public key from age secret key"
-      detail "You may need to manually add your public key to .sops.yaml"
-    elif grep -qF "$AGE_PUBLIC_KEY" .sops.yaml 2>/dev/null || grep -qF "$AGE_PUBLIC_KEY" config/sops.yaml 2>/dev/null; then
-      success "Public key already in .sops.yaml"
-    else
-      info "Adding your public key to .sops.yaml..."
-      last_key_line=$(grep -n 'age1' .sops.yaml | tail -1 | cut -d: -f1)
-      if [ -n "$last_key_line" ]; then
-        awk -v line="$last_key_line" -v key="$AGE_PUBLIC_KEY" \
-          'NR==line { sub(/,?$/, ",") } { print } NR==line { print "      " key }' \
-          .sops.yaml > .sops.yaml.tmp && mv .sops.yaml.tmp .sops.yaml
-        success "Added: ${DIM}$AGE_PUBLIC_KEY${RESET}"
-        echo ""
-        warn "A maintainer must commit this .sops.yaml change and re-encrypt:"
-        detail "  sops updatekeys config/dev/secrets.env"
-        detail "  sops updatekeys config/prod/secrets.env"
-      else
-        warn "Could not find age key list in .sops.yaml"
-        detail "Manually add this public key to the 'age:' field:"
-        detail "  $AGE_PUBLIC_KEY"
-      fi
-    fi
-  fi
-fi
-
-# ---------------------------------------------------------------------------
-# 6. CLASI Software Engineering Process
+# 4. CLASI Software Engineering Process
 # ---------------------------------------------------------------------------
 header "CLASI SE Process"
 
@@ -324,22 +138,18 @@ else
   fi
 fi
 
-# Run clasi init if the MCP config doesn't reference clasi yet
+# Run clasi init to create a fresh project database
 if command -v clasi &>/dev/null; then
-  if [ -f .mcp.json ] && grep -q "clasi" .mcp.json 2>/dev/null; then
-    success "CLASI already initialised"
+  info "Initializing CLASI project..."
+  if clasi init 2>/dev/null; then
+    success "CLASI initialized"
   else
-    info "Running clasi init..."
-    if clasi init 2>/dev/null; then
-      success "CLASI initialised"
-    else
-      warn "clasi init returned an error — you may need to run it manually"
-    fi
+    warn "clasi init returned an error — you may need to run it manually"
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# 7. Generate .env
+# 5. Generate .env
 # ---------------------------------------------------------------------------
 header "Environment File"
 
@@ -371,39 +181,35 @@ if [ -f .env ]; then
   done
 fi
 
-info "Generating .env from template..."
+info "Generating .env..."
 
-# Start from template, substitute detected Docker contexts
-sed \
-  -e "s/^DEV_DOCKER_CONTEXT=.*/DEV_DOCKER_CONTEXT=$DEV_CONTEXT/" \
-  -e "s/^PROD_DOCKER_CONTEXT=.*/PROD_DOCKER_CONTEXT=$PROD_CONTEXT/" \
-  .env.template > .env
+# Assemble .env from config layers
+{
+  echo "# --- public (dev) ---"
+  cat config/dev/public.env
+  echo ""
+  echo "# --- public-local ---"
+  echo "DEV_DOCKER_CONTEXT=$DEV_CONTEXT"
+  echo "PROD_DOCKER_CONTEXT=$PROD_CONTEXT"
+} > .env
 
-# Add SOPS_AGE_KEY_FILE if we found a key file that isn't already in the env
-if [ -n "$SOPS_LINE" ]; then
-  sed -i.bak "s|^#:SOPS_AGE_KEY_FILE=.*|$SOPS_LINE|" .env
-  rm -f .env.bak
-fi
-
-# Append decrypted application secrets
-if [ "$HAS_SOPS_AGE" = true ] && [ -n "$AGE_KEY" ]; then
-  info "Decrypting config/dev/secrets.env..."
-
-  # Pass the key inline so sops doesn't rely on auto-detection of key files
-  if SOPS_AGE_KEY="$AGE_KEY" sops -d config/dev/secrets.env >> .env 2>/dev/null; then
-    success "Appended decrypted secrets to .env"
+# Append secrets if dotconfig is available
+if command -v dotconfig &>/dev/null; then
+  info "Loading secrets via dotconfig..."
+  if dotconfig env dev >> .env 2>/dev/null; then
+    success "Secrets appended to .env"
   else
-    echo ""
-    err "Failed to decrypt config/dev/secrets.env"
-    detail "Your age key may not be authorised for this project yet."
-    detail "Ask a maintainer to add your public key to .sops.yaml and run:"
-    detail "  sops updatekeys config/dev/secrets.env"
-    echo ""
-    detail "In the meantime, add secrets manually (see config/dev/secrets.env.example)."
+    warn "dotconfig failed — add secrets manually to .env"
+    detail "See config/dev/secrets.env.example for required variables"
   fi
 else
-  warn "Skipped secrets decryption (no SOPS/age or no key)"
-  detail "Add secrets manually to .env — see config/dev/secrets.env.example"
+  echo ""
+  echo "# --- secrets (add manually or install dotconfig) ---" >> .env
+  if [ -f config/dev/secrets.env.example ]; then
+    cat config/dev/secrets.env.example >> .env
+  fi
+  warn "dotconfig not installed — secrets placeholders added to .env"
+  detail "Install dotconfig or add secrets manually"
 fi
 
 success "Created .env"
