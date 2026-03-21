@@ -16,7 +16,6 @@
     "dev:docker:migrate": "set -a && . ./.env && set +a && DOCKER_CONTEXT=$DEV_DOCKER_CONTEXT docker compose -f docker-compose.dev.yml exec server npx prisma migrate dev",
     "build": "cd server && npm run build && cd ../client && npm run build",
     "build:docker": "docker build -f docker/Dockerfile.server -t collegenav-server:${TAG:-latest} .",
-    "secrets:add-key": "./scripts/add-age-key.sh",
     "test": "echo 'Run individual test suites: test:db, test:server, test:client, test:e2e'",
     "test:db": "cd server && npx jest --config ../tests/db/jest.config.js",
     "test:server": "cd server && npx vitest run",

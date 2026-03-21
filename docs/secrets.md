@@ -158,14 +158,8 @@ This prints your public key (starts with `age1...`). Share it with the team.
 
 ### 2. Teammate with access: add the key and re-encrypt
 
-Run the interactive script — it handles both steps:
-
-```bash
-npm run secrets:add-key
-```
-
-It will prompt for the new age public key, append it to `config/sops.yaml`,
-and run `sops updatekeys` on every encrypted file in `config/`.
+Use dotconfig to add the key and re-encrypt. Run `dotconfig agent` for
+full instructions on key management.
 
 Commit and push the updated `config/sops.yaml` and re-encrypted files.
 
@@ -219,10 +213,8 @@ npm run secrets:prod:rm
 npm run secrets:prod
 ```
 
-These scripts use `scripts/load-secrets.sh` which:
-- Decrypts `config/prod/secrets.env` via SOPS
-- Creates each `KEY=value` as a lowercase Docker Swarm secret
-- Uses the production Docker context from `.env`
+Production secret management is handled by dotconfig. Run `dotconfig agent`
+for full instructions.
 
 ## Security Rules
 

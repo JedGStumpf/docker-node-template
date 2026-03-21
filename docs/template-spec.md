@@ -439,24 +439,10 @@ config/
 └── local/                     # Developer-specific overrides (gitignored)
 ```
 
-### 7.2 At-Rest Encryption — SOPS + age
+### 7.2 At-Rest Encryption
 
-Secrets are encrypted in the repository using [SOPS](https://github.com/getsops/sops)
-with [age](https://github.com/FiloSottile/age) encryption, following the
-[league-infrastructure wiki](https://github.com/league-infrastructure/league-infrastructure/wiki/Repository-Secrets-with-SOPS---age).
-
-**Workflow:**
-
-```bash
-# Decrypt for local development
-sops -d config/dev/secrets.env >> .env
-
-# Edit secrets in-place (decrypts to editor buffer, re-encrypts on save)
-sops config/dev/secrets.env
-
-# Onboard new developer: add their age public key to config/sops.yaml, then:
-npm run secrets:add-key
-```
+Secrets are managed by **dotconfig** (SOPS + age encryption under the hood).
+Run `dotconfig agent` for full documentation on managing secrets.
 
 ### 7.3 Runtime Secrets — Docker Swarm
 
