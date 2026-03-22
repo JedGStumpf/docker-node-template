@@ -3,7 +3,7 @@
   "version": "0.20260316.1",
   "private": true,
   "scripts": {
-    "dev": "set -a && . ./.env 2>/dev/null; set +a && case \"$DATABASE_URL\" in file:*) concurrently -n server,client -c green,magenta \"cd server && ./prisma/sqlite-push.sh && npm run dev\" \"cd client && npx wait-on http://localhost:3000/api/health && npx vite --host\" ;; *) concurrently -n db,server,client -c blue,green,magenta \"set -a && . ./.env && set +a && DOCKER_CONTEXT=$DEV_DOCKER_CONTEXT docker compose -f docker-compose.dev.yml up db\" \"set -a && . ./.env && set +a && ./docker/wait-for-db.sh && cd server && npx prisma generate && npx prisma migrate dev && npm run dev\" \"cd client && npx wait-on http://localhost:3000/api/health && npx vite --host\" ;; esac",
+    "dev": "./scripts/dev.sh",
     "test:server": "cd server && npx vitest run",
     "test:client": "cd client && npx vitest run"
   },
