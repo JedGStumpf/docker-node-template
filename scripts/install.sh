@@ -19,6 +19,7 @@ else
   BOLD="" DIM="" RESET="" RED="" GREEN="" YELLOW="" BLUE="" CYAN=""
 fi
 
+
 header() {
   echo ""
   echo "${BLUE}${BOLD}$1${RESET}"
