@@ -1,29 +1,24 @@
 import request from 'supertest';
-import { Pool } from 'pg';
-
-process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://app:devpassword@localhost:5433/app';
 
 import app from '../../server/src/app';
-import { getTestPool } from './helpers/db';
+import { prisma } from '../../server/src/services/prisma';
 
-let pool: Pool;
-
-async function cleanupPatterns(pool: Pool) {
+async function cleanupPatterns() {
   try {
-    await pool.query(`DELETE FROM "RoleAssignmentPattern" WHERE pattern LIKE '%test-perm%'`);
+    await prisma.roleAssignmentPattern.deleteMany({
+      where: { pattern: { contains: 'test-perm' } },
+    });
   } catch {
     // Table may not exist yet
   }
 }
 
 beforeAll(async () => {
-  pool = getTestPool();
-  await cleanupPatterns(pool);
+  await cleanupPatterns();
 }, 30000);
 
 afterAll(async () => {
-  await cleanupPatterns(pool);
+  await cleanupPatterns();
 });
 
 describe('Admin Permissions API', () => {

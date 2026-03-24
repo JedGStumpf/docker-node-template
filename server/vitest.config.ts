@@ -10,5 +10,6 @@ export default defineConfig({
     globalSetup: [path.resolve(__dirname, '../tests/server/global-setup.ts')],
     testTimeout: 30000,
     hookTimeout: 30000,
+    fileParallelism: false,
   },
 });

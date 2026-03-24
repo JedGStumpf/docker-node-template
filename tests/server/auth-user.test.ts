@@ -1,25 +1,14 @@
 import request from 'supertest';
-import { Pool } from 'pg';
-
-// Set test environment before importing app
-process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://app:devpassword@localhost:5433/app';
 
 import app from '../../server/src/app';
-import { getTestPool, cleanupTestDb, findUserByEmail, findUserById } from './helpers/db';
-
-let pool: Pool;
+import { cleanupTestDb, findUserByEmail, findUserById } from './helpers/db';
 
 beforeAll(async () => {
-  pool = getTestPool();
-  await cleanupTestDb(pool);
+  await cleanupTestDb();
 }, 30000);
 
 afterAll(async () => {
-  if (pool) {
-    await cleanupTestDb(pool);
-    await pool.end();
-  }
+  await cleanupTestDb();
 });
 
 describe('POST /api/auth/test-login', () => {
@@ -157,9 +146,9 @@ describe('Admin user management API', () => {
     expect(res.body).toHaveProperty('id');
 
     // Verify in DB
-    const dbUser = await findUserByEmail(pool, 'newuser@example.com');
+    const dbUser = await findUserByEmail('newuser@example.com');
     expect(dbUser).not.toBeNull();
-    expect(dbUser.displayName).toBe('New User');
+    expect(dbUser!.displayName).toBe('New User');
   });
 
   it('POST /api/admin/users returns 400 without email', async () => {
@@ -178,25 +167,25 @@ describe('Admin user management API', () => {
   });
 
   it('PUT /api/admin/users/:id updates user role', async () => {
-    const user = await findUserByEmail(pool, 'newuser@example.com');
-    const res = await adminAgent.put(`/api/admin/users/${user.id}`).send({
+    const user = await findUserByEmail('newuser@example.com');
+    const res = await adminAgent.put(`/api/admin/users/${user!.id}`).send({
       role: 'ADMIN',
     });
     expect(res.status).toBe(200);
     expect(res.body.role).toBe('ADMIN');
 
     // Verify in DB
-    const updated = await findUserById(pool, user.id);
-    expect(updated.role).toBe('ADMIN');
+    const updated = await findUserById(user!.id);
+    expect(updated!.role).toBe('ADMIN');
   });
 
   it('DELETE /api/admin/users/:id deletes a user', async () => {
-    const user = await findUserByEmail(pool, 'newuser@example.com');
-    const res = await adminAgent.delete(`/api/admin/users/${user.id}`);
+    const user = await findUserByEmail('newuser@example.com');
+    const res = await adminAgent.delete(`/api/admin/users/${user!.id}`);
     expect(res.status).toBe(204);
 
     // Verify deleted in DB
-    const deleted = await findUserById(pool, user.id);
+    const deleted = await findUserById(user!.id);
     expect(deleted).toBeNull();
   });
 

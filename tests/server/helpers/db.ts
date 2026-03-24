@@ -1,49 +1,69 @@
 /**
  * Test database helper.
- * Uses raw pg Pool for direct DB access in tests.
- * Prisma 7's generated client is ESM-only (uses import.meta) which
- * breaks in Jest's CJS environment, so we use pg directly.
+ * Uses Prisma client for direct DB access in tests.
  */
-import { Pool } from 'pg';
+import { prisma } from '../../../server/src/services/prisma';
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://app:devpassword@localhost:5433/app';
-
-let _pool: Pool | null = null;
-
-export function getTestPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({ connectionString });
-  }
-  return _pool;
-}
-
-export async function cleanupTestDb(pool: Pool) {
+export async function cleanupTestDb() {
   try {
-    // Delete related records first (FK constraints), then test users.
-    // Test users always use @example.com or @test.com emails.
-    const testEmailPattern = `email LIKE '%@example.com' OR email LIKE '%@test.com'`;
+    const testEmails = ['@example.com', '@test.com'];
 
-    // Messages reference authorId
-    await pool.query(`DELETE FROM "Message" WHERE "authorId" IN (SELECT id FROM "User" WHERE ${testEmailPattern})`).catch(() => {});
-    // UserProvider references userId
-    await pool.query(`DELETE FROM "UserProvider" WHERE "userId" IN (SELECT id FROM "User" WHERE ${testEmailPattern})`).catch(() => {});
-    // RoleAssignmentPattern may reference test patterns
-    await pool.query(`DELETE FROM "RoleAssignmentPattern" WHERE pattern LIKE '%@example.com' OR pattern LIKE '%@test.com'`).catch(() => {});
-    // Now delete the users themselves
-    await pool.query(`DELETE FROM "User" WHERE ${testEmailPattern}`);
-    // Clean up test channels — they all contain a 10+ digit timestamp in their names
-    await pool.query(`DELETE FROM "Channel" WHERE name ~ '[0-9]{10,}'`).catch(() => {});
+    // Find test users
+    const testUsers = await prisma.user.findMany({
+      where: {
+        OR: testEmails.map(suffix => ({
+          email: { endsWith: suffix },
+        })),
+      },
+      select: { id: true },
+    });
+    const userIds = testUsers.map((u: any) => u.id);
+
+    if (userIds.length > 0) {
+      // Delete related records first (FK constraints)
+      await prisma.message.deleteMany({
+        where: { authorId: { in: userIds } },
+      });
+      await prisma.userProvider.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: userIds } },
+      });
+    }
+
+    // Clean up test role assignment patterns
+    await prisma.roleAssignmentPattern.deleteMany({
+      where: {
+        OR: testEmails.map(suffix => ({
+          pattern: { endsWith: suffix },
+        })),
+      },
+    });
+
+    // Clean up test channels (names containing long numeric strings)
+    // Use a broad approach: delete channels created during tests
+    const channels = await prisma.channel.findMany();
+    const testChannelIds = channels
+      .filter((c: any) => /[0-9]{10,}/.test(c.name))
+      .map((c: any) => c.id);
+    if (testChannelIds.length > 0) {
+      await prisma.message.deleteMany({
+        where: { channelId: { in: testChannelIds } },
+      });
+      await prisma.channel.deleteMany({
+        where: { id: { in: testChannelIds } },
+      });
+    }
   } catch {
     // Tables may not exist yet
   }
 }
 
-export async function findUserByEmail(pool: Pool, email: string) {
-  const result = await pool.query(`SELECT * FROM "User" WHERE email = $1`, [email]);
-  return result.rows[0] || null;
+export async function findUserByEmail(email: string) {
+  return prisma.user.findFirst({ where: { email } });
 }
 
-export async function findUserById(pool: Pool, id: number) {
-  const result = await pool.query(`SELECT * FROM "User" WHERE id = $1`, [id]);
-  return result.rows[0] || null;
+export async function findUserById(id: number) {
+  return prisma.user.findFirst({ where: { id } });
 }

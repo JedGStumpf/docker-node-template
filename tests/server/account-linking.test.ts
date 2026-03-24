@@ -1,23 +1,13 @@
-import { Pool } from 'pg';
-
-process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://app:devpassword@localhost:5433/app';
-
 import { findOrCreateOAuthUser } from '../../server/src/routes/auth';
-import { getTestPool, cleanupTestDb } from './helpers/db';
-
-let pool: Pool;
+import { prisma } from '../../server/src/services/prisma';
+import { cleanupTestDb } from './helpers/db';
 
 beforeAll(async () => {
-  pool = getTestPool();
-  await cleanupTestDb(pool);
+  await cleanupTestDb();
 }, 30000);
 
 afterAll(async () => {
-  if (pool) {
-    await cleanupTestDb(pool);
-    await pool.end();
-  }
+  await cleanupTestDb();
 });
 
 describe('Account linking — findOrCreateOAuthUser', () => {
@@ -31,12 +21,12 @@ describe('Account linking — findOrCreateOAuthUser', () => {
     expect(user.id).toBeDefined();
 
     // Verify UserProvider record
-    const result = await pool.query(
-      `SELECT * FROM "UserProvider" WHERE "userId" = $1`, [user.id],
-    );
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].provider).toBe('github');
-    expect(result.rows[0].providerId).toBe('gh-123');
+    const providers = await prisma.userProvider.findMany({
+      where: { userId: user.id },
+    });
+    expect(providers.length).toBe(1);
+    expect(providers[0].provider).toBe('github');
+    expect(providers[0].providerId).toBe('gh-123');
   });
 
   it('links a second provider to the same user by email', async () => {
@@ -46,18 +36,19 @@ describe('Account linking — findOrCreateOAuthUser', () => {
     expect(user.email).toBe(sharedEmail);
 
     // Should be the SAME user (same id)
-    const firstUser = await pool.query(
-      `SELECT id FROM "User" WHERE email = $1`, [sharedEmail],
-    );
-    expect(firstUser.rows.length).toBe(1);
-    expect(user.id).toBe(firstUser.rows[0].id);
+    const firstUser = await prisma.user.findFirst({
+      where: { email: sharedEmail },
+    });
+    expect(firstUser).not.toBeNull();
+    expect(user.id).toBe(firstUser!.id);
 
     // Should now have TWO UserProvider records
-    const providers = await pool.query(
-      `SELECT * FROM "UserProvider" WHERE "userId" = $1 ORDER BY provider`, [user.id],
-    );
-    expect(providers.rows.length).toBe(2);
-    expect(providers.rows.map((r: any) => r.provider).sort()).toEqual(['github', 'google']);
+    const providers = await prisma.userProvider.findMany({
+      where: { userId: user.id },
+      orderBy: { provider: 'asc' },
+    });
+    expect(providers.length).toBe(2);
+    expect(providers.map((r: any) => r.provider).sort()).toEqual(['github', 'google']);
   });
 
   it('links a third provider (pike13) to the same user by email', async () => {
@@ -67,17 +58,18 @@ describe('Account linking — findOrCreateOAuthUser', () => {
     expect(user.email).toBe(sharedEmail);
 
     // Should have THREE UserProvider records, still one user
-    const providers = await pool.query(
-      `SELECT * FROM "UserProvider" WHERE "userId" = $1 ORDER BY provider`, [user.id],
-    );
-    expect(providers.rows.length).toBe(3);
-    expect(providers.rows.map((r: any) => r.provider).sort()).toEqual(['github', 'google', 'pike13']);
+    const providers = await prisma.userProvider.findMany({
+      where: { userId: user.id },
+      orderBy: { provider: 'asc' },
+    });
+    expect(providers.length).toBe(3);
+    expect(providers.map((r: any) => r.provider).sort()).toEqual(['github', 'google', 'pike13']);
 
     // Still only one user row for this email
-    const users = await pool.query(
-      `SELECT * FROM "User" WHERE email = $1`, [sharedEmail],
-    );
-    expect(users.rows.length).toBe(1);
+    const userCount = await prisma.user.count({
+      where: { email: sharedEmail },
+    });
+    expect(userCount).toBe(1);
   });
 
   it('returns existing user when same provider+id logs in again', async () => {
@@ -88,10 +80,10 @@ describe('Account linking — findOrCreateOAuthUser', () => {
     expect(user.displayName).toBe('Updated Name');
 
     // Still only 3 providers, not 4
-    const providers = await pool.query(
-      `SELECT * FROM "UserProvider" WHERE "userId" = $1`, [user.id],
-    );
-    expect(providers.rows.length).toBe(3);
+    const providers = await prisma.userProvider.findMany({
+      where: { userId: user.id },
+    });
+    expect(providers.length).toBe(3);
   });
 
   it('creates separate users for different emails', async () => {
@@ -102,9 +94,9 @@ describe('Account linking — findOrCreateOAuthUser', () => {
     expect(user.email).toBe(otherEmail);
 
     // Different user id from the shared email user
-    const sharedUser = await pool.query(
-      `SELECT id FROM "User" WHERE email = $1`, [sharedEmail],
-    );
-    expect(user.id).not.toBe(sharedUser.rows[0].id);
+    const sharedUser = await prisma.user.findFirst({
+      where: { email: sharedEmail },
+    });
+    expect(user.id).not.toBe(sharedUser!.id);
   });
 });

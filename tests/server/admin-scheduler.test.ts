@@ -1,36 +1,38 @@
 import request from 'supertest';
-import { Pool } from 'pg';
-
-process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://app:devpassword@localhost:5433/app';
 
 import app from '../../server/src/app';
-import { getTestPool } from './helpers/db';
+import { prisma, initPrisma } from '../../server/src/services/prisma';
 
-let pool: Pool;
+async function seedJobs() {
+  // Ensure Prisma is initialized before direct use
+  await initPrisma();
 
-async function seedJobs(pool: Pool) {
-  // Ensure the two default jobs exist
-  await pool.query(`
-    INSERT INTO "ScheduledJob" (name, frequency, enabled, "nextRun", "createdAt", "updatedAt")
-    VALUES ('daily-backup', 'daily', true, NOW() + INTERVAL '1 day', NOW(), NOW())
-    ON CONFLICT (name) DO NOTHING
-  `);
-  await pool.query(`
-    INSERT INTO "ScheduledJob" (name, frequency, enabled, "nextRun", "createdAt", "updatedAt")
-    VALUES ('weekly-backup', 'weekly', true, NOW() + INTERVAL '7 days', NOW(), NOW())
-    ON CONFLICT (name) DO NOTHING
-  `);
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 86400000);
+  const nextWeek = new Date(now.getTime() + 7 * 86400000);
+
+  await prisma.scheduledJob.upsert({
+    where: { name: 'daily-backup' },
+    create: { name: 'daily-backup', frequency: 'daily', enabled: true, nextRun: tomorrow },
+    update: {},
+  });
+  await prisma.scheduledJob.upsert({
+    where: { name: 'weekly-backup' },
+    create: { name: 'weekly-backup', frequency: 'weekly', enabled: true, nextRun: nextWeek },
+    update: {},
+  });
 }
 
 beforeAll(async () => {
-  pool = getTestPool();
-  await seedJobs(pool);
+  await seedJobs();
 }, 30000);
 
 afterAll(async () => {
   // Restore jobs to enabled state
-  await pool.query(`UPDATE "ScheduledJob" SET enabled = true WHERE name IN ('daily-backup', 'weekly-backup')`);
+  await prisma.scheduledJob.updateMany({
+    where: { name: { in: ['daily-backup', 'weekly-backup'] } },
+    data: { enabled: true },
+  });
 });
 
 describe('Admin Scheduler API', () => {
