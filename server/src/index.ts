@@ -36,6 +36,15 @@ initPrisma().then(() => initConfigCache()).then(async () => {
         console.error('expireUnverified job failed:', err);
       }
     }, expiryIntervalMs);
+
+    const reminderIntervalMs = Number(process.env.REMINDER_INTERVAL_MS) || 15 * 60 * 1000;
+    setInterval(async () => {
+      try {
+        await registry.instructors.sendReminders(registry.email, registry.matching);
+      } catch (err) {
+        console.error('sendReminders job failed:', err);
+      }
+    }, reminderIntervalMs);
   }
 
   app.listen(port, '0.0.0.0', () => {

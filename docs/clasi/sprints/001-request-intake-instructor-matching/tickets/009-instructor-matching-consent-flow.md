@@ -1,15 +1,15 @@
 ---
-id: "009"
-title: "Instructor matching & consent flow"
-status: todo
+id: 009
+title: Instructor matching & consent flow
+status: done
 use-cases:
-  - SUC-006
-  - SUC-007
+- SUC-006
+- SUC-007
 depends-on:
-  - "006"
-  - "008"
-github-issue: ""
-todo: ""
+- '006'
+- 008
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -21,14 +21,14 @@ Implement the full instructor consent lifecycle: accept/decline endpoints (token
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/instructor/assignments/:id/accept` with a valid `notificationToken` sets `InstructorAssignment.status = accepted`, sets `respondedAt`, and returns 200
-- [ ] `POST /api/instructor/assignments/:id/decline` with a valid `notificationToken` sets status to `declined`, then finds the next ranked candidate, creates a new `InstructorAssignment`, and dispatches a new match notification email
-- [ ] Both accept/decline endpoints return 400 for an invalid token and 404 for an unknown assignment ID
-- [ ] Both endpoints are idempotent: calling accept on an already-accepted assignment returns 200 without side effects
-- [ ] `InstructorService.sendReminders()` sends a reminder email to instructors with `pending` assignments where `notifiedAt` (or `lastReminderAt`) is older than `INSTRUCTOR_REMINDER_INTERVAL_HOURS` (default 8h) and `reminderCount < max_reminders`
-- [ ] `sendReminders()` marks an assignment `timed_out` when elapsed time since first notification exceeds `INSTRUCTOR_TIMEOUT_HOURS` (default 24h), then advances to the next instructor
-- [ ] When no further candidates exist for a request (all have declined or timed out), `EmailService.sendAdminNewRequestNotification` is called with a `no_match_available` flag
-- [ ] The reminder/timeout job is registered at server startup with interval `REMINDER_INTERVAL_MS`; not registered in `NODE_ENV=test`
+- [x] `POST /api/instructor/assignments/:id/accept` with a valid `notificationToken` sets `InstructorAssignment.status = accepted`, sets `respondedAt`, and returns 200
+- [x] `POST /api/instructor/assignments/:id/decline` with a valid `notificationToken` sets status to `declined`, then finds the next ranked candidate, creates a new `InstructorAssignment`, and dispatches a new match notification email
+- [x] Both accept/decline endpoints return 400 for an invalid token and 404 for an unknown assignment ID
+- [x] Both endpoints are idempotent: calling accept on an already-accepted assignment returns 200 without side effects
+- [x] `InstructorService.sendReminders()` sends a reminder email to instructors with `pending` assignments where `notifiedAt` (or `lastReminderAt`) is older than `INSTRUCTOR_REMINDER_INTERVAL_HOURS` (default 8h) and `reminderCount < max_reminders`
+- [x] `sendReminders()` marks an assignment `timed_out` when elapsed time since first notification exceeds `INSTRUCTOR_TIMEOUT_HOURS` (default 24h), then advances to the next instructor
+- [x] When no further candidates exist for a request (all have declined or timed out), `EmailService.sendAdminNewRequestNotification` is called with a `no_match_available` flag
+- [x] The reminder/timeout job is registered at server startup with interval `REMINDER_INTERVAL_MS`; not registered in `NODE_ENV=test`
 
 ## Testing
 
