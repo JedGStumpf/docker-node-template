@@ -1,14 +1,14 @@
 ---
-id: "003"
-title: "Instructor profile API"
-status: todo
+id: '003'
+title: Instructor profile API
+status: done
 use-cases:
-  - SUC-005
+- SUC-005
 depends-on:
-  - "001"
-  - "002"
-github-issue: ""
-todo: ""
+- '001'
+- '002'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -20,13 +20,13 @@ Implement `InstructorService` with `GET /api/instructor/profile` and `PUT /api/i
 
 ## Acceptance Criteria
 
-- [ ] `GET /api/instructor/profile` returns 200 + profile JSON if a profile exists for the authenticated instructor's `pike13UserId`
-- [ ] `GET /api/instructor/profile` returns 404 if no profile exists yet (first login)
-- [ ] `GET /api/instructor/profile` returns 401 if the caller is not authenticated
-- [ ] `PUT /api/instructor/profile` with valid body creates the profile if it doesn't exist, or updates it if it does, and returns 200 + the updated profile
-- [ ] `PUT /api/instructor/profile` validates required fields (`topics` non-empty array, `homeZip` valid 5-digit zip, `maxTravelMinutes` positive integer); returns 422 on invalid input
-- [ ] `PUT /api/instructor/profile` returns 401 if not authenticated
-- [ ] Profile correctly round-trips `topics[]` and `serviceZips[]` arrays in both SQLite and PostgreSQL
+- [x] `GET /api/instructor/profile` returns 200 + profile JSON if a profile exists for the authenticated instructor's `pike13UserId`
+- [x] `GET /api/instructor/profile` returns 404 if no profile exists yet (first login)
+- [x] `GET /api/instructor/profile` returns 401 if the caller is not authenticated
+- [x] `PUT /api/instructor/profile` with valid body creates the profile if it doesn't exist, or updates it if it does, and returns 200 + the updated profile
+- [x] `PUT /api/instructor/profile` validates required fields (`topics` non-empty array, `homeZip` valid 5-digit zip, `maxTravelMinutes` positive integer); returns 422 on invalid input
+- [x] `PUT /api/instructor/profile` returns 401 if not authenticated
+- [x] Profile correctly round-trips `topics[]` and `serviceZips[]` arrays in both SQLite and PostgreSQL
 
 ## Testing
 
