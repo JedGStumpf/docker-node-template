@@ -26,6 +26,27 @@ initPrisma().then(() => initConfigCache()).then(async () => {
   });
   registry.scheduler.startTicking();
 
+  // Sprint 1: Background jobs — not registered in test env
+  if (process.env.NODE_ENV !== 'test') {
+    const expiryIntervalMs = Number(process.env.REQUEST_EXPIRY_INTERVAL_MS) || 5 * 60 * 1000;
+    setInterval(async () => {
+      try {
+        await registry.requests.expireUnverified();
+      } catch (err) {
+        console.error('expireUnverified job failed:', err);
+      }
+    }, expiryIntervalMs);
+
+    const reminderIntervalMs = Number(process.env.REMINDER_INTERVAL_MS) || 15 * 60 * 1000;
+    setInterval(async () => {
+      try {
+        await registry.instructors.sendReminders(registry.email, registry.matching);
+      } catch (err) {
+        console.error('sendReminders job failed:', err);
+      }
+    }, reminderIntervalMs);
+  }
+
   app.listen(port, '0.0.0.0', () => {
     console.log(`Server listening on http://localhost:${port}`);
   });

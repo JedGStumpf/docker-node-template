@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "python-intro",
+    "title": "Introduction to Python",
+    "description": "A beginner-friendly introduction to Python programming.",
+    "ageRange": "8-18",
+    "topics": ["python", "programming"],
+    "typicalDurationMinutes": 90,
+    "equipmentNeeded": ["laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "scratch-basics",
+    "title": "Scratch Basics",
+    "description": "Introduction to programming with Scratch.",
+    "ageRange": "6-12",
+    "topics": ["scratch", "programming", "visual"],
+    "typicalDurationMinutes": 60,
+    "equipmentNeeded": ["laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "advanced-robotics",
+    "title": "Advanced Robotics",
+    "description": "Advanced robotics for experienced students.",
+    "ageRange": "14-18",
+    "topics": ["robotics", "engineering"],
+    "typicalDurationMinutes": 120,
+    "equipmentNeeded": ["robot kit", "laptop"],
+    "requestable": false
+  }
+]

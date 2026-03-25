@@ -14,6 +14,14 @@ import { SessionService } from './session.service';
 import { ChannelService } from './channel.service';
 import { MessageService } from './message.service';
 
+// Sprint 1 services
+import { ContentService } from './content.service';
+import { MatchingService } from './matching.service';
+import { RequestService } from './request.service';
+import { InstructorService } from './instructor.service';
+import { EmailService, InMemoryEmailTransport, SesEmailTransport } from './email.service';
+import { MockPike13Client, RealPike13Client, type IPike13Client } from './pike13.client';
+
 export class ServiceRegistry {
   readonly source: ServiceSource;
   readonly users: UserService;
@@ -24,6 +32,14 @@ export class ServiceRegistry {
   readonly channels: ChannelService;
   readonly messages: MessageService;
 
+  // Sprint 1 services
+  readonly content: ContentService;
+  readonly pike13Client: IPike13Client;
+  readonly matching: MatchingService;
+  readonly requests: RequestService;
+  readonly instructors: InstructorService;
+  readonly email: EmailService;
+
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
     this.users = new UserService(defaultPrisma);
@@ -33,6 +49,27 @@ export class ServiceRegistry {
     this.sessions = new SessionService(defaultPrisma);
     this.channels = new ChannelService(defaultPrisma);
     this.messages = new MessageService(defaultPrisma);
+
+    // Sprint 1 service instantiation
+    this.content = new ContentService();
+
+    // Pike13Client: use mock in test environment
+    if (process.env.NODE_ENV === 'test') {
+      this.pike13Client = new MockPike13Client();
+    } else {
+      this.pike13Client = new RealPike13Client();
+    }
+
+    this.matching = new MatchingService(defaultPrisma, this.pike13Client);
+    this.requests = new RequestService(defaultPrisma);
+    this.instructors = new InstructorService(defaultPrisma);
+
+    // Email transport: use in-memory mock in test environment
+    if (process.env.NODE_ENV === 'test') {
+      this.email = new EmailService(new InMemoryEmailTransport());
+    } else {
+      this.email = new EmailService(new SesEmailTransport());
+    }
   }
 
   static create(source?: ServiceSource): ServiceRegistry {
@@ -64,6 +101,14 @@ export class ServiceRegistry {
     await p.channel.deleteMany();
     await p.scheduledJob.deleteMany();
     await p.roleAssignmentPattern.deleteMany();
+    // Sprint 1 models (FK-safe order)
+    try {
+      await p.instructorAssignment.deleteMany();
+      await p.eventRequest.deleteMany();
+      await p.instructorProfile.deleteMany();
+    } catch {
+      // Tables may not exist yet in older migrations
+    }
     await p.user.deleteMany();
   }
 }

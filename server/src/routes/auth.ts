@@ -202,8 +202,27 @@ authRouter.post('/auth/test-login', async (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Not found' });
   }
   try {
-    const { email, displayName, role, provider, providerId } = req.body;
+    const { email, displayName, role, provider, providerId, pike13UserId } = req.body;
     const resolvedEmail = email || 'test@example.com';
+
+    // If pike13UserId is provided, set up a Pike13 session (for Sprint 1 instructor/admin tests)
+    if (pike13UserId) {
+      const pike13Role = role === 'admin' ? 'admin' : 'instructor';
+      (req.session as any).pike13UserId = pike13UserId;
+      (req.session as any).pike13Role = pike13Role;
+      (req.session as any).pike13DisplayName = displayName || 'Test Instructor';
+      (req.session as any).pike13Email = resolvedEmail;
+      return req.session.save((err) => {
+        if (err) return res.status(500).json({ error: 'Session save failed' });
+        res.json({
+          pike13UserId,
+          pike13Role,
+          displayName: displayName || 'Test Instructor',
+          email: resolvedEmail,
+        });
+      });
+    }
+
     const user = await prisma.user.upsert({
       where: { email: resolvedEmail },
       update: { displayName, role: role || 'USER' },
