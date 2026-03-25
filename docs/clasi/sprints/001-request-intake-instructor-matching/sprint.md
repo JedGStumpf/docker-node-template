@@ -102,4 +102,15 @@ Before tickets can be created, all of the following must be true:
 
 ## Tickets
 
-(To be created after sprint approval.)
+| ID | Title | Depends On |
+|----|-------|-----------|
+| 001 | Project skeleton & database setup | — |
+| 002 | Pike13 OAuth login & session management | 001 |
+| 003 | Instructor profile API | 001, 002 |
+| 004 | Content service — class catalog from content.json | 001 |
+| 005 | Zip centroid matching — MatchingService geography & topic filter | 001, 003 |
+| 006 | Pike13 availability reading — appointment slots | 002, 005 |
+| 007 | Request intake API & verification email | 001, 004, 005 |
+| 008 | Request verification & auto-expiry | 007 |
+| 009 | Instructor matching & consent flow | 006, 008 |
+| 010 | Admin requests view | 002, 007 |
