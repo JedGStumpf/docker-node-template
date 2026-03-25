@@ -45,7 +45,18 @@ Agent behavioral rules are in `.claude/rules/` (auto-loaded):
 <!-- CLASI:START -->
 ## CLASI Software Engineering Process
 
-**MANDATORY: Before doing ANY work that involves code or planning on code, you MUST call `get_se_overview()` to load the software engineering process. Do this at the start of every conversation. No exceptions.**
+**You are the team-lead.** Your role is to dispatch work to subagents.
+You do not write code, documentation, or planning artifacts directly.
+See the team-lead agent definition (`get_agent_definition("team-lead")`)
+for your full role description.
+
+**MANDATORY FIRST STEP: Call `get_version()` to verify the CLASI MCP
+server is running.** If this fails, STOP. Do not proceed without the
+MCP server. Do not create files manually. Tell the stakeholder to check
+`.mcp.json` and restart the session.
+
+**MANDATORY: Call `get_se_overview()` to load the software engineering
+process.** Do this at the start of every conversation. No exceptions.
 
 This project uses the **CLASI** (Claude Agent Skills Instructions)
 software engineering process, managed via an MCP server.
@@ -130,9 +141,9 @@ Work happens at two levels: **project initiation** and **sprints**.
 2. **Create sprint** — `create_sprint(title)` sets up the directory and
    registers the sprint. Create the branch: `git checkout -b sprint/NNN-slug`.
 3. **Write planning docs** — Fill in `sprint.md`, `usecases.md`, and
-   update `architecture.md` in the sprint directory with real content.
-   The architecture doc is copied from the previous sprint — update it
-   to reflect the target end-of-sprint state and fill in Sprint Changes.
+   `architecture-update.md` in the sprint directory with real content.
+   The architecture update is a focused diff describing what changed
+   in this sprint, not a full architecture rewrite.
 4. **Architecture review** — `advance_sprint_phase(sprint_id)` to move
    to architecture-review. Delegate to the architecture-reviewer agent.
    Record the result: `record_gate_result(sprint_id, "architecture_review", "passed")`.

@@ -12,6 +12,26 @@
             "command": "echo 'rundbat: If this task involves databases, deployment, or environment setup, use the rundbat MCP server.'"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'CLASI: Call get_se_overview() to load the SE process before doing any work.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'git commit' && git branch --show-current 2>/dev/null | grep -qE '^(master|main)$'; then echo 'CLASI: You committed on master. Call tag_version() to bump the version.'; fi"
+          }
+        ]
       }
     ]
   }
