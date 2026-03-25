@@ -1,13 +1,13 @@
 ---
-id: "001"
-title: "Project skeleton & database setup"
-status: todo
+id: '001'
+title: Project skeleton & database setup
+status: done
 use-cases:
-  - SUC-001
-  - SUC-005
+- SUC-001
+- SUC-005
 depends-on: []
-github-issue: ""
-todo: ""
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -19,14 +19,14 @@ Establish the Prisma schema for all Sprint 1 data models and ensure both SQLite 
 
 ## Acceptance Criteria
 
-- [ ] Prisma schema defines `InstructorProfile`, `EventRequest`, and `InstructorAssignment` models as specified in `architecture-update.md`
-- [ ] `EventRequest.status` enum covers `unverified` and `new` (additional statuses present for future use)
-- [ ] `InstructorAssignment.status` enum covers `pending`, `accepted`, `declined`, `timed_out`
-- [ ] PostgreSQL migration file is generated and applies cleanly via `npx prisma migrate dev`
-- [ ] SQLite variant is generated via `server/prisma/sqlite-push.sh` and applies cleanly
-- [ ] Array fields (`topics`, `serviceZips`, `preferredDates`) store and retrieve correctly in both SQLite (JSON) and PostgreSQL (native arrays)
-- [ ] `ServiceRegistry` is extended with placeholder entries for `ContentService`, `MatchingService`, `RequestService`, `InstructorService`, `EmailService`, and `Pike13Client`
-- [ ] `npm run test:server` passes with no failures on the empty schema
+- [x] Prisma schema defines `InstructorProfile`, `EventRequest`, and `InstructorAssignment` models as specified in `architecture-update.md`
+- [x] `EventRequest.status` enum covers `unverified` and `new` (additional statuses present for future use)
+- [x] `InstructorAssignment.status` enum covers `pending`, `accepted`, `declined`, `timed_out`
+- [x] PostgreSQL migration file is generated and applies cleanly via `npx prisma migrate dev`
+- [x] SQLite variant is generated via `server/prisma/sqlite-push.sh` and applies cleanly
+- [x] Array fields (`topics`, `serviceZips`, `preferredDates`) store and retrieve correctly in both SQLite (JSON) and PostgreSQL (native arrays)
+- [x] `ServiceRegistry` is extended with placeholder entries for `ContentService`, `MatchingService`, `RequestService`, `InstructorService`, `EmailService`, and `Pike13Client`
+- [x] `npm run test:server` passes with no failures on the empty schema
 
 ## Testing
 

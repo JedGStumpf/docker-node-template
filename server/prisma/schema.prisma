@@ -100,3 +100,78 @@ model Session {
   @@index([expire])
   @@map("session")
 }
+
+// ── Sprint 1: Request Intake & Instructor Matching ──────────────────────────
+
+enum RequestStatus {
+  unverified
+  new
+  discussing
+  dates_proposed
+  confirmed
+  completed
+  cancelled
+}
+
+enum AssignmentStatus {
+  pending
+  accepted
+  declined
+  timed_out
+}
+
+model InstructorProfile {
+  id               Int       @id @default(autoincrement())
+  pike13UserId     String    @unique
+  displayName      String
+  email            String
+  topics           String[]
+  homeZip          String
+  maxTravelMinutes Int       @default(60)
+  serviceZips      String[]  @default([])
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  assignments      InstructorAssignment[]
+}
+
+model EventRequest {
+  id                      String         @id @default(uuid())
+  classSlug               String
+  requesterName           String
+  requesterEmail          String
+  groupType               String
+  expectedHeadcount       Int
+  zipCode                 String
+  locationFreeText        String?
+  preferredDates          String[]
+  externalRegistrationUrl String?
+  siteControl             String?
+  siteReadiness           String?
+  marketingCapability     String?
+  verificationToken       String         @unique
+  verificationExpiresAt   DateTime
+  status                  RequestStatus  @default(unverified)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  assignments             InstructorAssignment[]
+}
+
+model InstructorAssignment {
+  id                String           @id @default(uuid())
+  requestId         String
+  instructorId      Int
+  status            AssignmentStatus @default(pending)
+  notificationToken String           @unique
+  notifiedAt        DateTime?
+  respondedAt       DateTime?
+  reminderCount     Int              @default(0)
+  lastReminderAt    DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  request           EventRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  instructor        InstructorProfile @relation(fields: [instructorId], references: [id])
+}
