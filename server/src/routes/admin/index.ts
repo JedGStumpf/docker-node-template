@@ -10,11 +10,16 @@ import { adminUsersRouter } from './users';
 import { adminPermissionsRouter } from './permissions';
 import { adminSchedulerRouter } from './scheduler';
 import { adminBackupsRouter } from './backups';
+import { adminRequestsRouter } from './requests';
 
 export const adminRouter = Router();
 
 // Auth routes (login/check don't require admin, logout does but is harmless)
 adminRouter.use(adminAuthRouter);
+
+// Sprint 1: Pike13-authenticated admin routes (requests view)
+// These use requirePike13Admin middleware internally
+adminRouter.use('/admin', adminRequestsRouter);
 
 // All other admin routes require authentication
 adminRouter.use('/admin', requireAdmin);

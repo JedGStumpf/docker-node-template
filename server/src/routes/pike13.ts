@@ -143,6 +143,7 @@ pike13Router.get('/auth/pike13/callback', async (req: Request, res: Response) =>
     // Cache as server token AND store in user's session
     cachedToken = accessToken;
     (req.session as any).pike13Token = accessToken;
+    (req.session as any).pike13AccessToken = accessToken;
     if (process.env.NODE_ENV !== 'test') console.log('Pike 13 OAuth token obtained via authorization code');
 
     // Fetch the current user's profile from Pike 13
@@ -157,6 +158,17 @@ pike13Router.get('/auth/pike13/callback', async (req: Request, res: Response) =>
       const pike13Id = String(person.id || tokenData.resource_owner_id || '');
       const email = person.email || '';
       const displayName = [person.first_name, person.last_name].filter(Boolean).join(' ') || email;
+
+      // Determine role based on Pike13 group membership
+      const adminGroupId = process.env.PIKE13_ADMIN_GROUP_ID;
+      const groupIds: string[] = (person.tags || []).map((t: any) => String(t.id || t));
+      const role: 'admin' | 'instructor' = (adminGroupId && groupIds.includes(adminGroupId)) ? 'admin' : 'instructor';
+
+      // Store Pike13 identity in session (used by requireInstructor/requirePike13Admin)
+      (req.session as any).pike13UserId = pike13Id;
+      (req.session as any).pike13Role = role;
+      (req.session as any).pike13DisplayName = displayName;
+      (req.session as any).pike13Email = email;
 
       if (pike13Id && email) {
         const user = await findOrCreateOAuthUser('pike13', pike13Id, email, displayName, null);

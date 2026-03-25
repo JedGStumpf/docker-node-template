@@ -1,14 +1,14 @@
 ---
-id: "002"
-title: "Pike13 OAuth login & session management"
-status: todo
+id: '002'
+title: Pike13 OAuth login & session management
+status: done
 use-cases:
-  - SUC-005
-  - SUC-008
+- SUC-005
+- SUC-008
 depends-on:
-  - "001"
-github-issue: ""
-todo: ""
+- '001'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -20,14 +20,14 @@ Implement Pike13 OAuth 2.0 login for instructors and admins. This ticket covers 
 
 ## Acceptance Criteria
 
-- [ ] `GET /api/auth/pike13` redirects to the Pike13 OAuth authorization URL with correct `client_id`, `redirect_uri`, and `scope`
-- [ ] `GET /api/auth/pike13/callback` exchanges the authorization code for a Pike13 access token, retrieves the Pike13 user profile, and creates an authenticated session
-- [ ] Session stores `pike13UserId`, `displayName`, `email`, and `role` (`instructor` or `admin` based on Pike13 group membership)
-- [ ] `POST /api/auth/logout` destroys the session and returns 200
-- [ ] `POST /api/auth/test-login` accepts `{ email, displayName, role }` and creates a session — available in `NODE_ENV=test` and `NODE_ENV=development` only; returns 404 in production
-- [ ] `Pike13Client` interface is defined (`exchangeCode`, `getUserProfile`, `getAvailableSlots`) with a mock implementation injectable via `ServiceRegistry`
-- [ ] Auth middleware `requireInstructor` and `requireAdmin` are implemented, returning 401/403 as appropriate
-- [ ] Vitest tests cover: successful OAuth callback (mocked Pike13 client), test-login flow, logout, 401 on protected route without session, 403 on instructor-role route for admin-only endpoint
+- [x] `GET /api/auth/pike13` redirects to the Pike13 OAuth authorization URL with correct `client_id`, `redirect_uri`, and `scope`
+- [x] `GET /api/auth/pike13/callback` exchanges the authorization code for a Pike13 access token, retrieves the Pike13 user profile, and creates an authenticated session
+- [x] Session stores `pike13UserId`, `displayName`, `email`, and `role` (`instructor` or `admin` based on Pike13 group membership)
+- [x] `POST /api/auth/logout` destroys the session and returns 200
+- [x] `POST /api/auth/test-login` accepts `{ email, displayName, role }` and creates a session — available in `NODE_ENV=test` and `NODE_ENV=development` only; returns 404 in production
+- [x] `Pike13Client` interface is defined (`exchangeCode`, `getUserProfile`, `getAvailableSlots`) with a mock implementation injectable via `ServiceRegistry`
+- [x] Auth middleware `requireInstructor` and `requireAdmin` are implemented, returning 401/403 as appropriate
+- [x] Vitest tests cover: successful OAuth callback (mocked Pike13 client), test-login flow, logout, 401 on protected route without session, 403 on instructor-role route for admin-only endpoint
 
 ## Testing
 
