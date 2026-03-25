@@ -1,15 +1,15 @@
 ---
-id: "006"
-title: "Pike13 availability reading — appointment slots"
-status: todo
+id: '006'
+title: "Pike13 availability reading \u2014 appointment slots"
+status: done
 use-cases:
-  - SUC-001
-  - SUC-002
+- SUC-001
+- SUC-002
 depends-on:
-  - "002"
-  - "005"
-github-issue: ""
-todo: ""
+- '002'
+- '005'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -21,12 +21,12 @@ Implement the real `Pike13Client.getAvailableSlots` method and wire it into the 
 
 ## Acceptance Criteria
 
-- [ ] `RealPike13Client.getAvailableSlots(pike13UserId, dateRange)` calls the Pike13 appointments API and returns an array of `{ start: Date, end: Date }` windows
-- [ ] `MatchingService.findMatchingInstructors({ zip, classSlug, lookAheadDays? })` runs all three stages (topic, geo, availability) and returns only instructors with at least one available slot in the window
-- [ ] `GET /api/requests/availability?zip=&classSlug=` now includes `slots` in the response: an array of ISO-8601 date strings aggregated from all matching instructors (deduplicated, sorted ascending, instructor identities not exposed)
-- [ ] Look-ahead window defaults to 90 days from today; configurable via `AVAILABILITY_LOOKAHEAD_DAYS`
-- [ ] If a Pike13 API call fails for one instructor, that instructor is skipped (degraded gracefully) and the others are still returned
-- [ ] `MockPike13Client.getAvailableSlots` returns a configurable set of slots — tests use the mock only
+- [x] `RealPike13Client.getAvailableSlots(pike13UserId, dateRange)` calls the Pike13 appointments API and returns an array of `{ start: Date, end: Date }` windows
+- [x] `MatchingService.findMatchingInstructors({ zip, classSlug, lookAheadDays? })` runs all three stages (topic, geo, availability) and returns only instructors with at least one available slot in the window
+- [x] `GET /api/requests/availability?zip=&classSlug=` now includes `slots` in the response: an array of ISO-8601 date strings aggregated from all matching instructors (deduplicated, sorted ascending, instructor identities not exposed)
+- [x] Look-ahead window defaults to 90 days from today; configurable via `AVAILABILITY_LOOKAHEAD_DAYS`
+- [x] If a Pike13 API call fails for one instructor, that instructor is skipped (degraded gracefully) and the others are still returned
+- [x] `MockPike13Client.getAvailableSlots` returns a configurable set of slots — tests use the mock only
 
 ## Testing
 

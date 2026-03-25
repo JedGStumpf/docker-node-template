@@ -200,6 +200,150 @@ describe('MatchingService — topic + geography filter', () => {
   });
 });
 
+describe('MatchingService — availability stage (ticket 006)', () => {
+  let mockPike13: MockPike13Client;
+  let matching: MatchingService;
+
+  const SLOT_A: import('../../server/src/services/pike13.client').Pike13AppointmentSlot = {
+    start: new Date('2026-04-01T10:00:00Z'),
+    end: new Date('2026-04-01T11:00:00Z'),
+  };
+  const SLOT_B: import('../../server/src/services/pike13.client').Pike13AppointmentSlot = {
+    start: new Date('2026-04-02T10:00:00Z'),
+    end: new Date('2026-04-02T11:00:00Z'),
+  };
+
+  // These tests need instructor profiles — create them independently from
+  // the topic+geo describe block (which cleans up in its own afterAll).
+  beforeAll(async () => {
+    await createInstructor({
+      pike13UserId: 'avail-test-001',
+      topics: ['python-intro'],
+      homeZip: '90210',
+      maxTravelMinutes: 60,
+    });
+    await createInstructor({
+      pike13UserId: 'avail-test-002',
+      topics: ['python-intro'],
+      homeZip: '90211',
+      maxTravelMinutes: 30,
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.instructorProfile.deleteMany({
+      where: {
+        pike13UserId: { in: ['avail-test-001', 'avail-test-002'] },
+      },
+    }).catch(() => {});
+  });
+
+  beforeEach(() => {
+    mockPike13 = new MockPike13Client();
+    matching = new MatchingService(prisma, mockPike13, TEST_CENTROIDS);
+  });
+
+  it('includes instructor when they have available slots', async () => {
+    mockPike13.setSlots('avail-test-001', [SLOT_A]);
+
+    const result = await matching.findMatchingInstructors({
+      zip: '90210',
+      classSlug: 'python-intro',
+    });
+
+    const ids = result.candidates.map((c) => c.pike13UserId);
+    expect(ids).toContain('avail-test-001');
+  });
+
+  it('excludes instructor when they have no available slots', async () => {
+    mockPike13.setSlots('avail-test-001', [SLOT_A]);
+    // avail-test-002 gets no setSlots call — returns [] by default
+
+    const result = await matching.findMatchingInstructors({
+      zip: '90210',
+      classSlug: 'python-intro',
+    });
+
+    const ids = result.candidates.map((c) => c.pike13UserId);
+    expect(ids).toContain('avail-test-001');
+    expect(ids).not.toContain('avail-test-002'); // no slots → excluded
+  });
+
+  it('degrades gracefully when one instructor Pike13 call throws — others still returned', async () => {
+    mockPike13.setShouldThrow('avail-test-001');     // Will throw
+    mockPike13.setSlots('avail-test-002', [SLOT_A]); // Returns normally
+
+    const result = await matching.findMatchingInstructors({
+      zip: '90210',
+      classSlug: 'python-intro',
+    });
+
+    const ids = result.candidates.map((c) => c.pike13UserId);
+    expect(ids).not.toContain('avail-test-001'); // Threw, skipped
+    expect(ids).toContain('avail-test-002');     // Returned normally
+  });
+
+  it('excludes instructors listed in excludeInstructorIds', async () => {
+    mockPike13.setSlots('avail-test-001', [SLOT_A]);
+    mockPike13.setSlots('avail-test-002', [SLOT_A]);
+
+    // Get the instructorId for avail-test-001 to exclude it
+    const prof001 = await prisma.instructorProfile.findFirst({
+      where: { pike13UserId: 'avail-test-001' },
+    });
+
+    const result = await matching.findMatchingInstructors({
+      zip: '90210',
+      classSlug: 'python-intro',
+      excludeInstructorIds: [prof001!.id],
+    });
+
+    const ids = result.candidates.map((c) => c.pike13UserId);
+    expect(ids).not.toContain('avail-test-001');
+    expect(ids).toContain('avail-test-002');
+  });
+
+  it('aggregateSlots deduplicates slots with the same start time', () => {
+    const candidates = [
+      {
+        instructorId: 1,
+        pike13UserId: 'a',
+        email: 'a@a.com',
+        distanceKm: 0,
+        slots: [SLOT_A, SLOT_B],
+      },
+      {
+        instructorId: 2,
+        pike13UserId: 'b',
+        email: 'b@b.com',
+        distanceKm: 1,
+        slots: [SLOT_A], // Duplicate of SLOT_A
+      },
+    ];
+
+    const slots = matching.aggregateSlots(candidates);
+    expect(slots).toHaveLength(2); // Only 2 unique slots
+    expect(slots[0]).toBe(SLOT_A.start.toISOString());
+    expect(slots[1]).toBe(SLOT_B.start.toISOString());
+  });
+
+  it('aggregateSlots returns slots sorted ascending', () => {
+    const candidates = [
+      {
+        instructorId: 1,
+        pike13UserId: 'a',
+        email: 'a@a.com',
+        distanceKm: 0,
+        slots: [SLOT_B, SLOT_A], // Out of order
+      },
+    ];
+
+    const slots = matching.aggregateSlots(candidates);
+    expect(slots[0]).toBe(SLOT_A.start.toISOString()); // Earlier date first
+    expect(slots[1]).toBe(SLOT_B.start.toISOString());
+  });
+});
+
 describe('GET /api/requests/availability', () => {
   beforeAll(async () => {
     // Ensure instructor profiles exist from above
@@ -226,12 +370,21 @@ describe('GET /api/requests/availability', () => {
     expect(res.body.available).toBe(false);
   });
 
-  it('returns { available: true, slots: [] } when instructors match (no availability stage yet)', async () => {
-    // With MockPike13Client returning no slots, available will be false
-    // This will be updated in ticket 006 when availability stage is wired in
-    // For now, the endpoint should return a valid response
+  it('returns { available: false } when instructors match geo/topic but have no Pike13 slots', async () => {
+    // MockPike13Client defaults to returning [] for all instructors
+    const res = await request(app).get('/api/requests/availability?zip=90210&classSlug=python-intro');
+    expect(res.status).toBe(200);
+    expect(res.body.available).toBe(false);
+  });
+
+  it('returns response with available property for valid zip+classSlug', async () => {
+    // Endpoint shape check — availability filtering is tested in unit tests above
     const res = await request(app).get('/api/requests/availability?zip=90210&classSlug=python-intro');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('available');
+    // When MockPike13Client returns no slots (default), available is false
+    if (res.body.available) {
+      expect(Array.isArray(res.body.slots)).toBe(true);
+    }
   });
 });
