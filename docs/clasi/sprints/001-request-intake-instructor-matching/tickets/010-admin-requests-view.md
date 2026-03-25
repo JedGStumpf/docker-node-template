@@ -1,14 +1,14 @@
 ---
-id: "010"
-title: "Admin requests view"
-status: todo
+id: '010'
+title: Admin requests view
+status: done
 use-cases:
-  - SUC-008
+- SUC-008
 depends-on:
-  - "002"
-  - "007"
-github-issue: ""
-todo: ""
+- '002'
+- '007'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -20,13 +20,13 @@ Implement `GET /api/admin/requests` — a protected endpoint that allows authent
 
 ## Acceptance Criteria
 
-- [ ] `GET /api/admin/requests` returns 200 + JSON array of requests for an authenticated admin
-- [ ] Response includes fields: `id`, `classSlug`, `requesterName`, `requesterEmail`, `groupType`, `zipCode`, `expectedHeadcount`, `status`, `createdAt`
-- [ ] By default, returns requests with `status: new`; supports optional query param `?status=unverified` to filter
-- [ ] Results are sorted by `createdAt` descending (most recent first)
-- [ ] Returns 401 if the caller has no session
-- [ ] Returns 403 if the caller is authenticated but has `role: instructor` (not admin)
-- [ ] Each request in the response includes an `assignments` summary: count of `pending`, `accepted`, `declined`, `timed_out` assignments
+- [x] `GET /api/admin/requests` returns 200 + JSON array of requests for an authenticated admin
+- [x] Response includes fields: `id`, `classSlug`, `requesterName`, `requesterEmail`, `groupType`, `zipCode`, `expectedHeadcount`, `status`, `createdAt`
+- [x] By default, returns requests with `status: new`; supports optional query param `?status=unverified` to filter
+- [x] Results are sorted by `createdAt` descending (most recent first)
+- [x] Returns 401 if the caller has no session
+- [x] Returns 403 if the caller is authenticated but has `role: instructor` (not admin)
+- [x] Each request in the response includes an `assignments` summary: count of `pending`, `accepted`, `declined`, `timed_out` assignments
 
 ## Testing
 
