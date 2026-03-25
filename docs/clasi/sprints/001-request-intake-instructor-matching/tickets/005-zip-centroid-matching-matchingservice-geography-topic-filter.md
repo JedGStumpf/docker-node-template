@@ -1,15 +1,15 @@
 ---
-id: "005"
-title: "Zip centroid matching — MatchingService geography & topic filter"
-status: todo
+id: '005'
+title: "Zip centroid matching \u2014 MatchingService geography & topic filter"
+status: done
 use-cases:
-  - SUC-001
-  - SUC-002
+- SUC-001
+- SUC-002
 depends-on:
-  - "001"
-  - "003"
-github-issue: ""
-todo: ""
+- '001'
+- '003'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -21,13 +21,13 @@ Implement the first two stages of `MatchingService`: topic filter and geography 
 
 ## Acceptance Criteria
 
-- [ ] A bundled static zip-centroid dataset is present at `server/src/data/zip-centroids.json`, covering US zip codes with lat/lng
-- [ ] `MatchingService.findCandidatesByTopicAndGeo({ zip, classSlug })` returns only `InstructorProfile` records where `topics` includes `classSlug` AND the instructor is within range
-- [ ] Geography filter uses `serviceZips` membership check if `serviceZips` is non-empty; otherwise uses Haversine distance converted to estimated drive minutes (fixed conversion: 1 minute ≈ 1.5 km)
-- [ ] Results are sorted by distance, nearest first
-- [ ] If the requester's zip or an instructor's `homeZip` is not in the centroid dataset, that zip is treated as unresolvable: an uncovered-zip error is returned for the requester zip; an instructor with unresolvable `homeZip` is skipped
-- [ ] `GET /api/requests/availability?zip=&classSlug=` returns 200 + `{ available: true, slots: [...] }` if at least one candidate exists (slots is an empty array at this stage — availability is wired in ticket 006), or `{ available: false }` if no candidates
-- [ ] `GET /api/requests/availability` returns 422 if `zip` or `classSlug` is missing or malformed
+- [x] A bundled static zip-centroid dataset is present at `server/src/static/zip-centroids.json`, covering US zip codes with lat/lng
+- [x] `MatchingService.findCandidatesByTopicAndGeo({ zip, classSlug })` returns only `InstructorProfile` records where `topics` includes `classSlug` AND the instructor is within range
+- [x] Geography filter uses `serviceZips` membership check if `serviceZips` is non-empty; otherwise uses Haversine distance converted to estimated drive minutes (fixed conversion: 1 minute ≈ 1.5 km)
+- [x] Results are sorted by distance, nearest first
+- [x] If the requester's zip or an instructor's `homeZip` is not in the centroid dataset, that zip is treated as unresolvable: an uncovered-zip error is returned for the requester zip; an instructor with unresolvable `homeZip` is skipped
+- [x] `GET /api/requests/availability?zip=&classSlug=` returns 200 + `{ available: true, slots: [...] }` if at least one candidate exists (slots is an empty array at this stage — availability is wired in ticket 006), or `{ available: false }` if no candidates
+- [x] `GET /api/requests/availability` returns 422 if `zip` or `classSlug` is missing or malformed
 
 ## Testing
 
