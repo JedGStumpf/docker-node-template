@@ -31,11 +31,22 @@ export class ContentService {
     if (!this.contentUrl) {
       return [];
     }
-    const resp = await fetch(this.contentUrl);
-    if (!resp.ok) {
-      throw new Error(`ContentService: failed to fetch content.json (${resp.status})`);
+
+    let data: any;
+    if (this.contentUrl.startsWith('file://')) {
+      // Local file — read directly (used in test environment)
+      const { readFile } = await import('fs/promises');
+      const { fileURLToPath } = await import('url');
+      const filePath = fileURLToPath(this.contentUrl);
+      const contents = await readFile(filePath, 'utf-8');
+      data = JSON.parse(contents);
+    } else {
+      const resp = await fetch(this.contentUrl);
+      if (!resp.ok) {
+        throw new Error(`ContentService: failed to fetch content.json (${resp.status})`);
+      }
+      data = await resp.json();
     }
-    const data: any = await resp.json();
     // Handle both array format and { classes: [...] } format
     const items: any[] = Array.isArray(data) ? data : (data.classes || []);
     return items.map((item: any) => ({

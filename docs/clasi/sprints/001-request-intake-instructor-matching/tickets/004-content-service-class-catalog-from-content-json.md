@@ -1,14 +1,14 @@
 ---
-id: "004"
-title: "Content service — class catalog from content.json"
-status: todo
+id: '004'
+title: "Content service \u2014 class catalog from content.json"
+status: done
 use-cases:
-  - SUC-001
-  - SUC-002
+- SUC-001
+- SUC-002
 depends-on:
-  - "001"
-github-issue: ""
-todo: ""
+- '001'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -20,12 +20,12 @@ Implement `ContentService` to fetch, parse, and cache the class catalog from joi
 
 ## Acceptance Criteria
 
-- [ ] `ContentService.getRequestableClasses()` fetches `content.json` from `CONTENT_JSON_URL` and returns only classes with `requestable: true`
-- [ ] `ContentService.getClassBySlug(slug)` returns the class record or `null` if not found or not requestable
-- [ ] Results are cached in-memory with a TTL of `CONTENT_CACHE_TTL_MS` (default 300000 ms); a second call within the TTL does not make a second HTTP request
-- [ ] Cache is invalidated after TTL expires and re-fetched on next call
-- [ ] In test environment, `CONTENT_JSON_URL` points to a local fixture file (`tests/fixtures/content.json`) — no real HTTP calls in tests
-- [ ] The fixture file contains at least 2 requestable classes and 1 non-requestable class for testing
+- [x] `ContentService.getRequestableClasses()` fetches `content.json` from `CONTENT_JSON_URL` and returns only classes with `requestable: true`
+- [x] `ContentService.getClassBySlug(slug)` returns the class record or `null` if not found or not requestable
+- [x] Results are cached in-memory with a TTL of `CONTENT_CACHE_TTL_MS` (default 300000 ms); a second call within the TTL does not make a second HTTP request
+- [x] Cache is invalidated after TTL expires and re-fetched on next call
+- [x] In test environment, `CONTENT_JSON_URL` points to a local fixture file (`tests/fixtures/content.json`) — no real HTTP calls in tests
+- [x] The fixture file contains at least 2 requestable classes and 1 non-requestable class for testing
 
 ## Testing
 
