@@ -1,14 +1,14 @@
 ---
-id: "008"
-title: "Request verification & auto-expiry"
-status: todo
+id: 008
+title: Request verification & auto-expiry
+status: done
 use-cases:
-  - SUC-003
-  - SUC-004
+- SUC-003
+- SUC-004
 depends-on:
-  - "007"
-github-issue: ""
-todo: ""
+- '007'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -20,15 +20,15 @@ Implement `RequestService.verifyRequest` (token check, 1-hour window, status tra
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/requests/:id/verify` with valid token and within the 1-hour window returns 200 + `{ status: "new" }`
-- [ ] `POST /api/requests/:id/verify` with a valid token but past `verificationExpiresAt` returns 410 (Gone) with an `expired` error code
-- [ ] `POST /api/requests/:id/verify` with an incorrect token returns 400
-- [ ] `POST /api/requests/:id/verify` for an unknown request ID returns 404
-- [ ] `POST /api/requests/:id/verify` on an already-`new` request returns 200 (idempotent)
-- [ ] After successful verification, `EventRequest.status` is `new` in the database
-- [ ] `RequestService.expireUnverified()` deletes all `EventRequest` records in `unverified` status where `verificationExpiresAt < now()`
-- [ ] The expiry job does NOT delete requests in `new` or later statuses
-- [ ] Background expiry job is registered at server startup with interval `REQUEST_EXPIRY_INTERVAL_MS`; job is not registered when `NODE_ENV=test`
+- [x] `POST /api/requests/:id/verify` with valid token and within the 1-hour window returns 200 + `{ status: "new" }`
+- [x] `POST /api/requests/:id/verify` with a valid token but past `verificationExpiresAt` returns 410 (Gone) with an `expired` error code
+- [x] `POST /api/requests/:id/verify` with an incorrect token returns 400
+- [x] `POST /api/requests/:id/verify` for an unknown request ID returns 404
+- [x] `POST /api/requests/:id/verify` on an already-`new` request returns 200 (idempotent)
+- [x] After successful verification, `EventRequest.status` is `new` in the database
+- [x] `RequestService.expireUnverified()` deletes all `EventRequest` records in `unverified` status where `verificationExpiresAt < now()`
+- [x] The expiry job does NOT delete requests in `new` or later statuses
+- [x] Background expiry job is registered at server startup with interval `REQUEST_EXPIRY_INTERVAL_MS`; job is not registered when `NODE_ENV=test`
 
 ## Testing
 
