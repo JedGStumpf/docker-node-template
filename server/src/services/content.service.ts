@@ -23,7 +23,9 @@ export class ContentService {
   private contentUrl: string;
 
   constructor(contentUrl?: string, ttlMs?: number) {
-    this.contentUrl = contentUrl || process.env.CONTENT_JSON_URL || '';
+    // Explicit empty string means "no URL" — don't fall back to env var.
+    // Undefined means "use env var default".
+    this.contentUrl = contentUrl !== undefined ? contentUrl : (process.env.CONTENT_JSON_URL || '');
     this.ttlMs = ttlMs !== undefined ? ttlMs : (Number(process.env.CONTENT_CACHE_TTL_MS) || DEFAULT_TTL_MS);
   }
 

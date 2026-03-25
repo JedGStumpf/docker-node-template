@@ -1,17 +1,17 @@
 ---
-id: "007"
-title: "Request intake API & verification email"
-status: todo
+id: '007'
+title: Request intake API & verification email
+status: done
 use-cases:
-  - SUC-001
-  - SUC-002
-  - SUC-003
+- SUC-001
+- SUC-002
+- SUC-003
 depends-on:
-  - "001"
-  - "004"
-  - "005"
-github-issue: ""
-todo: ""
+- '001'
+- '004'
+- '005'
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -25,15 +25,15 @@ This ticket also wires up `EmailService` with its injectable transport interface
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/requests` with all required fields and a valid, covered zip returns 201 + `{ id, status: "unverified" }`
-- [ ] `POST /api/requests` with an unrecognized or non-requestable `classSlug` returns 422
-- [ ] `POST /api/requests` with a zip that has no matching instructors returns 422 with a `no_coverage` error code
-- [ ] `POST /api/requests` with missing required fields returns 422 with field-level validation errors
-- [ ] A verification email is dispatched (captured by in-memory mock) containing a link with `requestId` and `verificationToken`
-- [ ] `verificationExpiresAt` is set to `createdAt + VERIFICATION_EXPIRY_MS` (default 1 hour)
-- [ ] `GET /api/requests/:id` returns 200 + request JSON for any valid ID (status visible to anyone with the obscure URL)
-- [ ] `GET /api/requests/:id` returns 404 for an unknown ID
-- [ ] `EmailService` uses an injectable Nodemailer transport; in tests the mock transport captures sent messages for assertion
+- [x] `POST /api/requests` with all required fields and a valid, covered zip returns 201 + `{ id, status: "unverified" }`
+- [x] `POST /api/requests` with an unrecognized or non-requestable `classSlug` returns 422
+- [x] `POST /api/requests` with a zip that has no matching instructors returns 422 with a `no_coverage` error code
+- [x] `POST /api/requests` with missing required fields returns 422 with field-level validation errors
+- [x] A verification email is dispatched (captured by in-memory mock) containing a link with `requestId` and `verificationToken`
+- [x] `verificationExpiresAt` is set to `createdAt + VERIFICATION_EXPIRY_MS` (default 1 hour)
+- [x] `GET /api/requests/:id` returns 200 + request JSON for any valid ID (status visible to anyone with the obscure URL)
+- [x] `GET /api/requests/:id` returns 404 for an unknown ID
+- [x] `EmailService` uses an injectable Nodemailer transport; in tests the mock transport captures sent messages for assertion
 
 ## Testing
 
