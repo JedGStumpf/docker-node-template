@@ -157,6 +157,11 @@ model EventRequest {
   updatedAt               DateTime       @updatedAt
 
   assignments             InstructorAssignment[]
+  registeredSiteId        Int?
+  emailThreadAddress      String?
+  asanaTaskId             String?
+
+  site                    RegisteredSite? @relation(fields: [registeredSiteId], references: [id])
 }
 
 model InstructorAssignment {
@@ -174,4 +179,62 @@ model InstructorAssignment {
 
   request           EventRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
   instructor        InstructorProfile @relation(fields: [instructorId], references: [id])
+}
+
+// ── Sprint 2: Site Registration & Email Coordination ────────────────────────
+
+model RegisteredSite {
+  id          Int       @id @default(autoincrement())
+  name        String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  lat         Float?
+  lng         Float?
+  capacity    Int?
+  roomNotes   String?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invitations SiteInvitation[]
+  reps        SiteRep[]
+  requests    EventRequest[]
+}
+
+model SiteInvitation {
+  id               Int             @id @default(autoincrement())
+  token            String          @unique
+  contactEmail     String
+  contactName      String
+  registeredSiteId Int?
+  expiresAt        DateTime
+  usedAt           DateTime?
+  createdAt        DateTime        @default(now())
+
+  site             RegisteredSite? @relation(fields: [registeredSiteId], references: [id])
+}
+
+model SiteRep {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  displayName      String
+  registeredSiteId Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  site             RegisteredSite @relation(fields: [registeredSiteId], references: [id])
+  sessions         SiteRepSession[]
+}
+
+model SiteRepSession {
+  id         Int      @id @default(autoincrement())
+  siteRepId  Int
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  siteRep    SiteRep  @relation(fields: [siteRepId], references: [id], onDelete: Cascade)
 }
