@@ -23,6 +23,7 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@types/nodemailer": "^7.0.11",
+    "asana": "^3.1.10",
     "better-sqlite3": "^12.8.0",
     "dotenv": "^17.3.1",
     "express": "^4.21.2",

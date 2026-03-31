@@ -22,6 +22,8 @@ import { InstructorService } from './instructor.service';
 import { EmailService, InMemoryEmailTransport, SesEmailTransport } from './email.service';
 import { MockPike13Client, RealPike13Client, type IPike13Client } from './pike13.client';
 import { SiteService } from './site.service';
+import { AsanaService } from './asana.service';
+import { MockAsanaClient, RealAsanaClient } from './asana.client';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -41,6 +43,7 @@ export class ServiceRegistry {
   readonly instructors: InstructorService;
   readonly email: EmailService;
   readonly sites: SiteService;
+  readonly asana: AsanaService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -74,6 +77,12 @@ export class ServiceRegistry {
     }
 
     this.sites = new SiteService(defaultPrisma);
+
+    if (process.env.NODE_ENV === 'production') {
+      this.asana = new AsanaService(new RealAsanaClient());
+    } else {
+      this.asana = new AsanaService(new MockAsanaClient());
+    }
   }
 
   static create(source?: ServiceSource): ServiceRegistry {

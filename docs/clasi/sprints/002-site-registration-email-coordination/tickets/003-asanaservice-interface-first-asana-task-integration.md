@@ -1,7 +1,7 @@
 ---
 id: "003"
 title: "AsanaService — interface-first Asana task integration"
-status: todo
+status: done
 use-cases: [SUC-005]
 depends-on: ["001"]
 github-issue: ""
@@ -34,12 +34,12 @@ Install the `asana` npm package in `server/`.
 
 ## Acceptance Criteria
 
-- [ ] `IAsanaClient` interface defined and exported
-- [ ] `RealAsanaClient` implements `IAsanaClient` using the `asana` npm SDK
-- [ ] `AsanaService.createRequestTask` returns `null` (not throws) when `ASANA_PROJECT_GID` or `ASANA_ACCESS_TOKEN` is absent
-- [ ] `ServiceRegistry` exposes `services.asana` (instance of `AsanaService`)
-- [ ] Tests use a `MockAsanaClient` — no real Asana HTTP calls in test suite
-- [ ] TypeScript compiles with no errors
+- [x] `IAsanaClient` interface defined and exported
+- [x] `RealAsanaClient` implements `IAsanaClient` using the `asana` npm SDK
+- [x] `AsanaService.createRequestTask` returns `null` (not throws) when `ASANA_PROJECT_GID` or `ASANA_ACCESS_TOKEN` is absent
+- [x] `ServiceRegistry` exposes `services.asana` (instance of `AsanaService`)
+- [x] Tests use a `MockAsanaClient` — no real Asana HTTP calls in test suite
+- [x] TypeScript compiles with no errors
 
 ## Testing
 
