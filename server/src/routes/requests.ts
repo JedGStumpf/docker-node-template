@@ -11,6 +11,12 @@ import { ServiceError } from '../errors';
 
 export const requestsRouter = Router();
 
+function firstString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return undefined;
+}
+
 /** GET /api/requests/availability?zip=&classSlug= */
 requestsRouter.get('/requests/availability', async (req: Request, res: Response) => {
   try {
@@ -151,7 +157,10 @@ requestsRouter.post('/requests', async (req: Request, res: Response) => {
 /** GET /api/requests/:id */
 requestsRouter.get('/requests/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = firstString(req.params.id);
+    if (!id) {
+      return res.status(400).json({ error: 'Invalid request id' });
+    }
     const eventRequest = await req.services.requests.getRequest(id);
     if (!eventRequest) {
       return res.status(404).json({ error: 'Request not found' });
@@ -165,10 +174,10 @@ requestsRouter.get('/requests/:id', async (req: Request, res: Response) => {
 /** POST /api/requests/:id/verify */
 requestsRouter.post('/requests/:id/verify', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const token = (req.query.token || req.body.token) as string;
+    const id = firstString(req.params.id);
+    const token = firstString(req.query.token) || firstString(req.body?.token);
 
-    if (!token) {
+    if (!id || !token) {
       return res.status(400).json({ error: 'Verification token required' });
     }
 

@@ -21,6 +21,7 @@ import { RequestService } from './request.service';
 import { InstructorService } from './instructor.service';
 import { EmailService, InMemoryEmailTransport, SesEmailTransport } from './email.service';
 import { MockPike13Client, RealPike13Client, type IPike13Client } from './pike13.client';
+import { SiteService } from './site.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -39,6 +40,7 @@ export class ServiceRegistry {
   readonly requests: RequestService;
   readonly instructors: InstructorService;
   readonly email: EmailService;
+  readonly sites: SiteService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -70,6 +72,8 @@ export class ServiceRegistry {
     } else {
       this.email = new EmailService(new SesEmailTransport());
     }
+
+    this.sites = new SiteService(defaultPrisma);
   }
 
   static create(source?: ServiceSource): ServiceRegistry {
@@ -103,6 +107,10 @@ export class ServiceRegistry {
     await p.roleAssignmentPattern.deleteMany();
     // Sprint 1 models (FK-safe order)
     try {
+      await p.siteRepSession.deleteMany();
+      await p.siteRep.deleteMany();
+      await p.siteInvitation.deleteMany();
+      await p.registeredSite.deleteMany();
       await p.instructorAssignment.deleteMany();
       await p.eventRequest.deleteMany();
       await p.instructorProfile.deleteMany();

@@ -1,7 +1,7 @@
 ---
 id: "002"
 title: "SiteService and EmailService extensions"
-status: todo
+status: done
 use-cases: [SUC-001, SUC-002, SUC-003]
 depends-on: ["001"]
 github-issue: ""
@@ -36,14 +36,14 @@ Register `SiteService` on `ServiceRegistry` as `services.sites`.
 
 ## Acceptance Criteria
 
-- [ ] `SiteService` exists at `server/src/services/site.service.ts` with all methods listed above
-- [ ] `ServiceRegistry` exposes `services.sites` (instance of `SiteService`)
-- [ ] `createMagicLink` stores SHA-256 hash (not raw token) in `SiteRepSession.tokenHash`
-- [ ] `verifyMagicLink` hashes the raw input before lookup; marks session used after first verification
-- [ ] `registerSite` auto-populates lat/lng from zip centroid data when ZIP matches
-- [ ] `EmailService` has three new methods: `sendSiteInvitation`, `sendMagicLink`, `sendSiteRepNotification`
-- [ ] All existing `EmailService` notification methods accept optional `replyTo` param without breaking existing callers
-- [ ] TypeScript compiles with no errors (`npm run build` or `tsc --noEmit`)
+- [x] `SiteService` exists at `server/src/services/site.service.ts` with all methods listed above
+- [x] `ServiceRegistry` exposes `services.sites` (instance of `SiteService`)
+- [x] `createMagicLink` stores SHA-256 hash (not raw token) in `SiteRepSession.tokenHash`
+- [x] `verifyMagicLink` hashes the raw input before lookup; marks session used after first verification
+- [x] `registerSite` auto-populates lat/lng from zip centroid data when ZIP matches
+- [x] `EmailService` has three new methods: `sendSiteInvitation`, `sendMagicLink`, `sendSiteRepNotification`
+- [x] All existing `EmailService` notification methods accept optional `replyTo` param without breaking existing callers
+- [x] TypeScript compiles with no errors (`npm run build` or `tsc --noEmit`)
 
 ## Testing
 
