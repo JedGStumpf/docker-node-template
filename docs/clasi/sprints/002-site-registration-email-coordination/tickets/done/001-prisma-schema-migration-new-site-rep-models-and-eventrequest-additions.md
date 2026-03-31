@@ -1,7 +1,7 @@
 ---
 id: '001'
 title: "Prisma schema migration \u2014 new site/rep models and EventRequest additions"
-status: in-progress
+status: done
 use-cases:
 - SUC-001
 - SUC-002
