@@ -68,6 +68,7 @@ requestsRouter.post('/requests', async (req: Request, res: Response) => {
       siteControl,
       siteReadiness,
       marketingCapability,
+      registeredSiteId,
     } = req.body;
 
     // Validate required fields
@@ -129,6 +130,7 @@ requestsRouter.post('/requests', async (req: Request, res: Response) => {
       siteControl,
       siteReadiness,
       marketingCapability,
+      registeredSiteId: typeof registeredSiteId === 'number' ? registeredSiteId : undefined,
     });
 
     // Send verification email
@@ -186,6 +188,8 @@ requestsRouter.post('/requests/:id/verify', async (req: Request, res: Response) 
       token,
       req.services.matching,
       req.services.email,
+      req.services.asana,
+      req.services.sites,
     );
 
     res.json({ status: updated.status });

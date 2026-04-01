@@ -17,6 +17,9 @@ import { messagesRouter } from './routes/messages';
 import { searchRouter } from './routes/search';
 import { instructorRouter } from './routes/instructor';
 import { requestsRouter } from './routes/requests';
+import { sitesRouter } from './routes/sites';
+import { siteRegistrationRouter } from './routes/site-registration';
+import { siteRepRouter } from './routes/site-rep';
 import { mcpTokenAuth } from './middleware/mcpAuth';
 import { createMcpHandler } from './mcp/handler';
 import { errorHandler } from './middleware/errorHandler';
@@ -101,6 +104,9 @@ app.use('/api', searchRouter);
 // Sprint 1 routes
 app.use('/api', instructorRouter);
 app.use('/api', requestsRouter);
+app.use('/api', sitesRouter);
+app.use('/api', siteRegistrationRouter);
+app.use('/api', siteRepRouter);
 
 // MCP endpoint — token-based auth, separate from session auth
 app.post('/api/mcp', mcpTokenAuth, createMcpHandler());

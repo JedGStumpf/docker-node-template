@@ -79,6 +79,12 @@ export async function findOrCreateOAuthUser(
 
 export const authRouter = Router();
 
+function firstString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return undefined;
+}
+
 // --- GitHub OAuth Strategy ---
 // Register only if credentials are configured.
 // Docs: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
@@ -240,6 +246,59 @@ authRouter.post('/auth/test-login', async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Test login failed' });
+  }
+});
+
+// --- Site rep magic-link auth (Sprint 2) ---
+
+authRouter.post('/auth/magic-link/request', async (req: Request, res: Response) => {
+  try {
+    const email = firstString(req.body?.email);
+    if (!email) {
+      return res.status(400).json({ error: 'email is required' });
+    }
+
+    const token = await req.services.sites.createMagicLink(email);
+    if (token) {
+      const base = process.env.APP_BASE_URL || 'http://localhost:3000';
+      const url = `${base}/site-rep/login?token=${token}`;
+      try {
+        await req.services.email.sendMagicLink(email, url);
+      } catch {
+        // Always return success to avoid account enumeration
+      }
+    }
+
+    // Always 200 to avoid revealing whether an account exists.
+    return res.json({ success: true });
+  } catch {
+    return res.json({ success: true });
+  }
+});
+
+authRouter.post('/auth/magic-link/verify', async (req: Request, res: Response) => {
+  try {
+    const token = firstString(req.body?.token);
+    if (!token) {
+      return res.status(400).json({ error: 'token is required' });
+    }
+
+    const siteRep = await req.services.sites.verifyMagicLink(token);
+    (req.session as any).siteRepId = siteRep.id;
+    (req.session as any).siteRepEmail = siteRep.email;
+    (req.session as any).siteRepDisplayName = siteRep.displayName;
+    (req.session as any).role = 'SITE_REP';
+
+    return req.session.save((err) => {
+      if (err) return res.status(500).json({ error: 'Session save failed' });
+      return res.json({
+        siteRepId: siteRep.id,
+        email: siteRep.email,
+        displayName: siteRep.displayName,
+      });
+    });
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired magic link' });
   }
 });
 

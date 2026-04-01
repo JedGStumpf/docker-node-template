@@ -1,7 +1,7 @@
 ---
 id: "007"
 title: "Site rep profile routes — GET/PUT /api/site-rep/profile"
-status: todo
+status: done
 use-cases: [SUC-002, SUC-003]
 depends-on: ["006"]
 github-issue: ""

@@ -1,7 +1,7 @@
 ---
 id: "005"
 title: "Site registration public API routes — GET /api/sites, GET/POST /api/site-reg/:token"
-status: todo
+status: done
 use-cases: [SUC-001, SUC-002, SUC-003]
 depends-on: ["002"]
 github-issue: ""

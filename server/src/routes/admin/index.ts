@@ -11,6 +11,7 @@ import { adminPermissionsRouter } from './permissions';
 import { adminSchedulerRouter } from './scheduler';
 import { adminBackupsRouter } from './backups';
 import { adminRequestsRouter } from './requests';
+import { adminSitesRouter } from './sites';
 
 export const adminRouter = Router();
 
@@ -34,3 +35,4 @@ adminRouter.use('/admin', adminUsersRouter);
 adminRouter.use('/admin', adminPermissionsRouter);
 adminRouter.use('/admin', adminSchedulerRouter);
 adminRouter.use('/admin', adminBackupsRouter);
+adminRouter.use('/admin', adminSitesRouter);

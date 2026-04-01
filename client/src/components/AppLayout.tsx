@@ -16,6 +16,7 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   { to: '/', label: 'Home', end: true },
   { to: '/chat', label: 'Chat' },
+  { to: '/request', label: 'Request Event' },
 ];
 
 const ADMIN_NAV: NavItem[] = [
@@ -29,6 +30,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/permissions', label: 'Permissions' },
   { to: '/admin/scheduler', label: 'Scheduled Jobs' },
   { to: '/admin/import-export', label: 'Import/Export' },
+  { to: '/admin/requests', label: 'Requests' },
 ];
 
 const BOTTOM_NAV: NavItem[] = [

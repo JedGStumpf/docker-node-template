@@ -1,7 +1,7 @@
 ---
 id: "008"
 title: "Admin sites management routes — invite, list, detail, edit"
-status: todo
+status: done
 use-cases: [SUC-001, SUC-007]
 depends-on: ["002"]
 github-issue: ""

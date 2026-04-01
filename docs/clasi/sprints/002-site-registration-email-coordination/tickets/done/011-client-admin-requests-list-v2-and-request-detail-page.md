@@ -1,7 +1,7 @@
 ---
 id: "011"
 title: "Client: Admin requests list v2 and request detail page"
-status: todo
+status: done
 use-cases: [SUC-007, SUC-008]
 depends-on: ["009"]
 github-issue: ""

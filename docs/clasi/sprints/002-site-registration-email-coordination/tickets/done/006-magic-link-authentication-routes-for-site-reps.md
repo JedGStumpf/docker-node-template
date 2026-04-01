@@ -1,7 +1,7 @@
 ---
 id: "006"
 title: "Magic-link authentication routes for site reps"
-status: todo
+status: done
 use-cases: [SUC-002]
 depends-on: ["002"]
 github-issue: ""

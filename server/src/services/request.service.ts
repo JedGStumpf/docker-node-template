@@ -2,6 +2,7 @@
  * RequestService — manages EventRequest lifecycle.
  */
 
+import { ulid } from 'ulid';
 import { ServiceError } from '../errors';
 
 export interface CreateRequestInput {
@@ -17,6 +18,7 @@ export interface CreateRequestInput {
   siteControl?: string;
   siteReadiness?: string;
   marketingCapability?: string;
+  registeredSiteId?: number;
 }
 
 const DEFAULT_VERIFICATION_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
@@ -44,6 +46,7 @@ export class RequestService {
         siteControl: input.siteControl,
         siteReadiness: input.siteReadiness,
         marketingCapability: input.marketingCapability,
+        registeredSiteId: input.registeredSiteId,
         verificationToken,
         verificationExpiresAt,
         status: 'unverified',
@@ -60,6 +63,8 @@ export class RequestService {
     token: string,
     matchingService?: any,
     emailService?: any,
+    asanaService?: any,
+    siteService?: any,
   ) {
     const request = await this.prisma.eventRequest.findUnique({ where: { id } });
     if (!request) {
@@ -81,10 +86,44 @@ export class RequestService {
     }
 
     // Move to new status
+    const threadDomain = process.env.THREAD_DOMAIN?.trim();
+    const emailThreadAddress = threadDomain
+      ? `req-${ulid().toLowerCase()}@threads.${threadDomain}`
+      : null;
+
     const updated = await this.prisma.eventRequest.update({
       where: { id },
-      data: { status: 'new' },
+      data: {
+        status: 'new',
+        emailThreadAddress: emailThreadAddress || undefined,
+      },
     });
+
+    let asanaTaskId: string | null = null;
+    if (asanaService?.createRequestTask) {
+      try {
+        const task = await asanaService.createRequestTask({
+          id: updated.id,
+          classSlug: updated.classSlug,
+          requesterName: updated.requesterName,
+          requesterEmail: updated.requesterEmail,
+          zipCode: updated.zipCode,
+          preferredDates: Array.isArray(updated.preferredDates) ? updated.preferredDates : [],
+          groupType: updated.groupType,
+          expectedHeadcount: updated.expectedHeadcount,
+        });
+        asanaTaskId = task?.gid || null;
+      } catch (error) {
+        console.warn('RequestService: Asana task creation failed', error);
+      }
+
+      if (asanaTaskId) {
+        await this.prisma.eventRequest.update({
+          where: { id: updated.id },
+          data: { asanaTaskId },
+        });
+      }
+    }
 
     // Trigger instructor matching if services provided
     if (matchingService && emailService) {
@@ -120,17 +159,61 @@ export class RequestService {
               requesterName: request.requesterName,
               zipCode: request.zipCode,
               preferredDates,
+              replyTo: emailThreadAddress || undefined,
             });
           } catch {
             // Continue even if one email fails
           }
+        }
+
+        try {
+          await emailService.sendAdminNewRequestNotification({
+            requestId: updated.id,
+            classTitle: updated.classSlug,
+            requesterName: updated.requesterName,
+            replyTo: emailThreadAddress || undefined,
+          });
+        } catch {
+          // Continue even if admin email fails
         }
       } catch {
         // Don't fail the verification if matching fails
       }
     }
 
-    return updated;
+    if (updated.registeredSiteId && siteService?.getSiteRepBySiteId && emailService?.sendSiteRepNotification) {
+      try {
+        const siteRep = await siteService.getSiteRepBySiteId(updated.registeredSiteId);
+        if (siteRep) {
+          await emailService.sendSiteRepNotification(
+            siteRep,
+            {
+              id: updated.id,
+              classSlug: updated.classSlug,
+              requesterName: updated.requesterName,
+              preferredDates: Array.isArray(updated.preferredDates) ? updated.preferredDates : [],
+              zipCode: updated.zipCode,
+            },
+            emailThreadAddress || undefined,
+          );
+        }
+      } catch {
+        // Site rep notification should not block verification
+      }
+    }
+
+    if (asanaTaskId) {
+      return {
+        ...updated,
+        asanaTaskId,
+        emailThreadAddress: emailThreadAddress || updated.emailThreadAddress,
+      };
+    }
+
+    return {
+      ...updated,
+      emailThreadAddress: emailThreadAddress || updated.emailThreadAddress,
+    };
   }
 
   async expireUnverified() {

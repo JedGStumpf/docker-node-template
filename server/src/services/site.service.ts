@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
-import { ServiceError } from '../errors';
+import { createHash, randomUUID } from 'node:crypto';
+import { ConflictError, ServiceError } from '../errors';
 
 export interface SiteRegistrationData {
   name: string;
@@ -12,7 +12,7 @@ export interface SiteRegistrationData {
 }
 
 export interface SiteRepRegistrationData {
-  email: string;
+  email?: string;
   displayName: string;
 }
 
@@ -27,6 +27,10 @@ const DEFAULT_MAGIC_LINK_TTL_MINUTES = 1440;
 
 function tokenSha256(token: string): string {
   return createHash('sha256').update(token).digest('hex');
+}
+
+function isExpired(expiresAt: Date | string): boolean {
+  return new Date(expiresAt) < new Date();
 }
 
 export class SiteService {
@@ -46,7 +50,18 @@ export class SiteService {
   }
 
   async createInvitation(contactEmail: string, contactName: string): Promise<string> {
-    const token = crypto.randomUUID();
+    const existing = await this.prisma.siteInvitation.findFirst({
+      where: {
+        contactEmail,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (existing) {
+      throw new ConflictError('A pending invitation already exists for this email');
+    }
+
+    const token = randomUUID();
     const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
     await this.prisma.siteInvitation.create({
       data: {
@@ -59,14 +74,18 @@ export class SiteService {
     return token;
   }
 
-  async getInvitationByToken(token: string) {
-    const invitation = await this.prisma.siteInvitation.findUnique({
+  async getInvitationRaw(token: string) {
+    return this.prisma.siteInvitation.findUnique({
       where: { token },
       include: { site: true },
     });
+  }
+
+  async getInvitationByToken(token: string) {
+    const invitation = await this.getInvitationRaw(token);
     if (!invitation) return null;
     if (invitation.usedAt) return null;
-    if (new Date(invitation.expiresAt) < new Date()) return null;
+    if (isExpired(invitation.expiresAt)) return null;
     return invitation;
   }
 
@@ -74,6 +93,12 @@ export class SiteService {
     const invitation = await this.getInvitationByToken(token);
     if (!invitation) {
       throw new ServiceError('Invitation is invalid or expired', 400);
+    }
+
+    const repEmail = repData.email || invitation.contactEmail;
+    const existingRep = await this.prisma.siteRep.findUnique({ where: { email: repEmail } });
+    if (existingRep) {
+      throw new ConflictError('Site representative email is already registered');
     }
 
     const centroids = await this.getZipCentroids();
@@ -97,7 +122,7 @@ export class SiteService {
 
       const rep = await tx.siteRep.create({
         data: {
-          email: repData.email,
+          email: repEmail,
           displayName: repData.displayName,
           registeredSiteId: site.id,
         },
@@ -123,6 +148,7 @@ export class SiteService {
       select: {
         id: true,
         name: true,
+        address: true,
         city: true,
         state: true,
         zipCode: true,
@@ -152,6 +178,21 @@ export class SiteService {
     });
   }
 
+  async getSiteRepBySiteId(siteId: number) {
+    return this.prisma.siteRep.findFirst({
+      where: { registeredSiteId: siteId },
+      include: { site: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async getSiteRepProfile(siteRepId: number) {
+    return this.prisma.siteRep.findUnique({
+      where: { id: siteRepId },
+      include: { site: true },
+    });
+  }
+
   async updateSite(
     id: number,
     data: Partial<{
@@ -178,13 +219,13 @@ export class SiteService {
     });
   }
 
-  async createMagicLink(email: string): Promise<string> {
+  async createMagicLink(email: string): Promise<string | null> {
     const rep = await this.prisma.siteRep.findUnique({ where: { email } });
     if (!rep) {
-      throw new ServiceError('Site rep not found', 404);
+      return null;
     }
 
-    const rawToken = crypto.randomUUID();
+    const rawToken = randomUUID();
     const tokenHash = tokenSha256(rawToken);
     const ttlMinutes = Number(process.env.MAGIC_LINK_TTL_MINUTES) || DEFAULT_MAGIC_LINK_TTL_MINUTES;
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
@@ -212,12 +253,14 @@ export class SiteService {
     });
 
     if (!session) {
-      throw new ServiceError('Invalid or expired magic link', 400);
+      throw new ServiceError('Invalid magic link', 401);
     }
+
     if (session.usedAt) {
-      throw new ServiceError('Magic link already used', 400);
+      throw new ServiceError('Magic link already used', 401);
     }
-    if (new Date(session.expiresAt) < new Date()) {
+
+    if (isExpired(session.expiresAt)) {
       throw new ServiceError('Magic link expired', 410);
     }
 

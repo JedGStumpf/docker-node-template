@@ -1,7 +1,7 @@
 ---
 id: "004"
 title: "RequestService extensions — email thread address, Asana task, site rep notification"
-status: todo
+status: done
 use-cases: [SUC-004, SUC-005, SUC-006]
 depends-on: ["001", "002", "003"]
 github-issue: ""

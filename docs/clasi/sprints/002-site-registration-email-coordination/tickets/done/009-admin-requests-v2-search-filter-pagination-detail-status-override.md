@@ -1,7 +1,7 @@
 ---
 id: "009"
 title: "Admin requests v2 — search, filter, pagination, detail, status override"
-status: todo
+status: done
 use-cases: [SUC-007, SUC-008]
 depends-on: ["004"]
 github-issue: ""

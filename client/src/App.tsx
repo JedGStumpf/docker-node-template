@@ -9,6 +9,9 @@ import McpSetup from './pages/McpSetup';
 import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 import Channels from './pages/Channels';
+import RequestIntake from './pages/RequestIntake';
+import AdminRequests from './pages/admin/AdminRequests';
+import AdminRequestDetail from './pages/admin/AdminRequestDetail';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import EnvironmentInfo from './pages/admin/EnvironmentInfo';
@@ -38,6 +41,7 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/about" element={<About />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/request" element={<RequestIntake />} />
             <Route path="/mcp-setup" element={<McpSetup />} />
 
             {/* Admin pages — auth-gated by AdminLayout */}
@@ -52,6 +56,8 @@ function App() {
               <Route path="/admin/scheduler" element={<ScheduledJobsPanel />} />
               <Route path="/admin/import-export" element={<ImportExport />} />
               <Route path="/admin/channels" element={<Channels />} />
+              <Route path="/admin/requests" element={<AdminRequests />} />
+              <Route path="/admin/requests/:id" element={<AdminRequestDetail />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

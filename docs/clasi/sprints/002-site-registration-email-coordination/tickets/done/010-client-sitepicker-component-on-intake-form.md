@@ -1,7 +1,7 @@
 ---
 id: "010"
 title: "Client: SitePicker component on intake form"
-status: todo
+status: done
 use-cases: [SUC-003]
 depends-on: ["005"]
 github-issue: ""
