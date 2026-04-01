@@ -189,6 +189,7 @@ export class InstructorService {
         classTitle: request.classSlug,
         requesterName: request.requesterName,
         noMatchAvailable: true,
+        replyTo: request.emailThreadAddress || undefined,
       });
       return;
     }
@@ -226,6 +227,7 @@ export class InstructorService {
         requesterName: request.requesterName,
         zipCode: request.zipCode,
         preferredDates,
+        replyTo: request.emailThreadAddress || undefined,
       });
     } catch {
       // Continue even if email fails

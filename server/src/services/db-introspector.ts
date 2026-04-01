@@ -72,10 +72,10 @@ class PostgresIntrospector implements DbIntrospector {
 
     const rows = await this.prisma.$queryRawUnsafe(
       `SELECT * FROM "${name}" ORDER BY 1 LIMIT ${limit} OFFSET ${offset}`
-    );
+    ) as Record<string, unknown>[];
 
     return {
-      columns: columns.map((c) => ({
+      columns: columns.map((c: { column_name: string; data_type: string; is_nullable: string }) => ({
         name: c.column_name,
         type: c.data_type,
         nullable: c.is_nullable === 'YES',

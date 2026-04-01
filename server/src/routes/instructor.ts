@@ -12,6 +12,12 @@ import { ServiceError } from '../errors';
 
 export const instructorRouter = Router();
 
+function firstString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return undefined;
+}
+
 /** GET /api/instructor/profile */
 instructorRouter.get('/instructor/profile', requireInstructor, async (req: Request, res: Response) => {
   try {
@@ -61,10 +67,10 @@ instructorRouter.put('/instructor/profile', requireInstructor, async (req: Reque
 /** POST /api/instructor/assignments/:id/accept */
 instructorRouter.post('/instructor/assignments/:id/accept', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const token = (req.query.token || req.body.token) as string;
+    const id = firstString(req.params.id);
+    const token = firstString(req.query.token) || firstString(req.body?.token);
 
-    if (!token) {
+    if (!id || !token) {
       return res.status(400).json({ error: 'notification token required' });
     }
 
@@ -81,10 +87,10 @@ instructorRouter.post('/instructor/assignments/:id/accept', async (req: Request,
 /** POST /api/instructor/assignments/:id/decline */
 instructorRouter.post('/instructor/assignments/:id/decline', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const token = (req.query.token || req.body.token) as string;
+    const id = firstString(req.params.id);
+    const token = firstString(req.query.token) || firstString(req.body?.token);
 
-    if (!token) {
+    if (!id || !token) {
       return res.status(400).json({ error: 'notification token required' });
     }
 
