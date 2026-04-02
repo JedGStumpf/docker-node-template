@@ -142,11 +142,24 @@ All outbound email captured by `InMemoryEmailTransport` in tests. Scheduler jobs
 
 Before tickets can be created, all of the following must be true:
 
-- [ ] Sprint planning documents are complete (sprint.md, use cases, architecture)
-- [ ] Architecture review passed
-- [ ] Stakeholder has approved the sprint plan
+- [x] Sprint planning documents are complete (sprint.md, use cases, architecture)
+- [x] Architecture review passed
+- [x] Stakeholder has approved the sprint plan
 
 ## Tickets
+
+| # | Title | Depends On | Use Cases |
+|---|-------|-----------|-----------|
+| 001 | Prisma schema migration — Registration model, EventRequest & InstructorAssignment extensions | — | All (foundation) |
+| 002 | Request status transition state machine | 001 | SUC-001, SUC-002 |
+| 003 | EmailService extensions — iCal generation, cancellation, digest, and deadline notifications | 002 | SUC-002, SUC-006, SUC-007, SUC-009 |
+| 004 | RegistrationService — registration, event info, threshold check, and date finalization | 002, 003 | SUC-003, SUC-004 |
+| 005 | Public event routes — event info, registration, and registrations list | 004 | SUC-003 |
+| 006 | Admin event configuration & manual date finalization routes | 004 | SUC-005 |
+| 007 | Instructor assignment timeout & assignedInstructorId enhancements | 001 | SUC-008 |
+| 008 | Scheduled jobs — assignment reminders, registration digest, deadline check | 003, 004, 007 | SUC-008, SUC-009 |
+| 009 | Client — public event page & registration form | 005 | SUC-003, SUC-006, SUC-007 |
+| 010 | Client — admin request detail & event management UI enhancements | 006 | SUC-001, SUC-005 |
 
 (Created after stakeholder approval.)
 
