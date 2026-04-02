@@ -1,11 +1,13 @@
 ---
-id: "006"
-title: "Admin event configuration & manual date finalization routes"
-status: todo
-use-cases: [SUC-005]
-depends-on: [004]
-github-issue: ""
-todo: ""
+id: '006'
+title: Admin event configuration & manual date finalization routes
+status: done
+use-cases:
+- SUC-005
+depends-on:
+- 4
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
