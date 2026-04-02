@@ -215,3 +215,170 @@ describe('RegistrationService', () => {
     });
   });
 });
+
+// ── Ticket 005: Public Event Route Tests ──────────────────────────────────
+
+import request from 'supertest';
+process.env.NODE_ENV = 'test';
+import app from '../../server/src/app';
+
+describe('Public event routes', () => {
+  async function loginAdmin() {
+    const agent = request.agent(app);
+    await agent
+      .post('/api/auth/test-login')
+      .send({ pike13UserId: 'admin-events', role: 'admin', displayName: 'Events Admin' })
+      .expect(200);
+    return agent;
+  }
+
+  describe('GET /api/events/:requestId', () => {
+    it('returns event info with valid token', async () => {
+      const req = await seedRequest();
+      const res = await request(app)
+        .get(`/api/events/${req.id}?token=${REG_TOKEN}`)
+        .expect(200);
+
+      expect(res.body.classSlug).toBe('coding-101');
+      expect(res.body.proposedDates).toHaveLength(2);
+      expect(res.body.voteTallies).toBeDefined();
+    });
+
+    it('returns 401 without token', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .get(`/api/events/${req.id}`)
+        .expect(401);
+    });
+
+    it('returns 401 with invalid token', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .get(`/api/events/${req.id}?token=wrong-token`)
+        .expect(401);
+    });
+  });
+
+  describe('POST /api/events/:requestId/register', () => {
+    it('returns 201 with valid registration data', async () => {
+      const req = await seedRequest();
+      const res = await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({
+          token: REG_TOKEN,
+          attendeeName: 'Route Tester',
+          attendeeEmail: 'route@example.com',
+          numberOfKids: 2,
+          availableDates: ['2026-06-15'],
+        })
+        .expect(201);
+
+      expect(res.body.attendeeName).toBe('Route Tester');
+      expect(res.body.status).toBe('interested');
+    });
+
+    it('returns 401 without token', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({
+          attendeeName: 'No Token',
+          attendeeEmail: 'notoken@example.com',
+          numberOfKids: 1,
+          availableDates: ['2026-06-15'],
+        })
+        .expect(401);
+    });
+
+    it('returns 400 for missing required fields', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({ token: REG_TOKEN })
+        .expect(400);
+    });
+
+    it('returns 409 for duplicate email', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({
+          token: REG_TOKEN,
+          attendeeName: 'Dupe',
+          attendeeEmail: 'dupe@example.com',
+          numberOfKids: 1,
+          availableDates: ['2026-06-15'],
+        })
+        .expect(201);
+
+      await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({
+          token: REG_TOKEN,
+          attendeeName: 'Dupe Again',
+          attendeeEmail: 'dupe@example.com',
+          numberOfKids: 2,
+          availableDates: ['2026-06-22'],
+        })
+        .expect(409);
+    });
+
+    it('returns 422 for invalid availableDates', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({
+          token: REG_TOKEN,
+          attendeeName: 'Bad Dates',
+          attendeeEmail: 'baddates@example.com',
+          numberOfKids: 1,
+          availableDates: ['2099-01-01'],
+        })
+        .expect(422);
+    });
+
+    it('returns 422 when request not in dates_proposed status', async () => {
+      const req = await seedRequest('discussing');
+      await request(app)
+        .post(`/api/events/${req.id}/register`)
+        .send({
+          token: REG_TOKEN,
+          attendeeName: 'Wrong Status',
+          attendeeEmail: 'wrong@example.com',
+          numberOfKids: 1,
+          availableDates: ['2026-06-15'],
+        })
+        .expect(422);
+    });
+  });
+
+  describe('GET /api/events/:requestId/registrations', () => {
+    it('returns 401 for unauthenticated access', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .get(`/api/events/${req.id}/registrations`)
+        .expect(401);
+    });
+
+    it('returns registrations for authenticated admin', async () => {
+      const req = await seedRequest();
+      await prisma.registration.create({
+        data: {
+          requestId: req.id,
+          attendeeName: 'Listed',
+          attendeeEmail: 'listed@example.com',
+          numberOfKids: 3,
+          availableDates: ['2026-06-15'],
+        },
+      });
+
+      const admin = await loginAdmin();
+      const res = await admin
+        .get(`/api/events/${req.id}/registrations`)
+        .expect(200);
+
+      expect(res.body.registrations).toHaveLength(1);
+      expect(res.body.voteTallies).toBeDefined();
+    });
+  });
+});
