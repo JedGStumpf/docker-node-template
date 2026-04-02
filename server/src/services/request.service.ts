@@ -259,6 +259,7 @@ export class RequestService {
     requestId: string,
     newStatus: string,
     data?: TransitionData,
+    emailService?: any,
   ) {
     const request = await this.prisma.eventRequest.findUnique({
       where: { id: requestId },
@@ -323,8 +324,64 @@ export class RequestService {
     const updated = await this.prisma.eventRequest.update({
       where: { id: requestId },
       data: updateData,
-      include: { site: true },
+      include: { site: true, registrations: true },
     });
+
+    // Side effect: Send cancellation emails after transition to cancelled
+    if (newStatus === 'cancelled' && emailService) {
+      const eventDetails = {
+        title: updated.classSlug,
+        requestId: updated.id,
+        replyTo: updated.emailThreadAddress || undefined,
+      };
+      const recipients: string[] = [];
+
+      // Requester
+      if (updated.requesterEmail) {
+        recipients.push(updated.requesterEmail);
+      }
+
+      // Assigned instructor
+      if (updated.assignedInstructorId) {
+        try {
+          const instructor = await this.prisma.instructorProfile.findUnique({
+            where: { id: updated.assignedInstructorId },
+          });
+          if (instructor?.email) {
+            recipients.push(instructor.email);
+          }
+        } catch { /* continue */ }
+      }
+
+      // Site rep
+      if (updated.registeredSiteId) {
+        try {
+          const siteRep = await this.prisma.siteRep.findFirst({
+            where: { registeredSiteId: updated.registeredSiteId },
+          });
+          if (siteRep?.email) {
+            recipients.push(siteRep.email);
+          }
+        } catch { /* continue */ }
+      }
+
+      // Registrants
+      if (updated.registrations?.length) {
+        for (const reg of updated.registrations) {
+          if (reg.attendeeEmail) {
+            recipients.push(reg.attendeeEmail);
+          }
+        }
+      }
+
+      // Deduplicate and send
+      const uniqueRecipients = [...new Set(recipients)];
+      for (const to of uniqueRecipients) {
+        try {
+          await emailService.sendCancellationNotification(to, eventDetails);
+        } catch { /* continue even if one email fails */ }
+      }
+    }
 
     return updated;
   }

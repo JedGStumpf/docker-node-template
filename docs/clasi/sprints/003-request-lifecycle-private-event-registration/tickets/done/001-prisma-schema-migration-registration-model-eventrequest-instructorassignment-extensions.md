@@ -2,7 +2,7 @@
 id: '001'
 title: "Prisma schema migration \u2014 Registration model, EventRequest & InstructorAssignment\
   \ extensions"
-status: in-progress
+status: done
 use-cases:
 - SUC-001
 - SUC-002

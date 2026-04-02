@@ -1,11 +1,17 @@
 ---
-id: "003"
-title: "EmailService extensions — iCal generation, cancellation, digest, and deadline notifications"
-status: todo
-use-cases: [SUC-002, SUC-006, SUC-007, SUC-009]
-depends-on: [002]
-github-issue: ""
-todo: ""
+id: '003'
+title: "EmailService extensions \u2014 iCal generation, cancellation, digest, and\
+  \ deadline notifications"
+status: in-progress
+use-cases:
+- SUC-002
+- SUC-006
+- SUC-007
+- SUC-009
+depends-on:
+- 2
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 

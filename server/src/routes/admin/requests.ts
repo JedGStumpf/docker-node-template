@@ -143,6 +143,7 @@ adminRequestsRouter.put('/requests/:id/status', requirePike13Admin, async (req: 
       req.params.id,
       mappedStatus,
       Object.keys(transitionData).length > 0 ? transitionData : undefined,
+      req.services.email,
     );
     return res.json(updated);
   } catch (err: any) {
