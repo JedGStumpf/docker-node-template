@@ -2,7 +2,7 @@
 id: '003'
 title: "EmailService extensions \u2014 iCal generation, cancellation, digest, and\
   \ deadline notifications"
-status: in-progress
+status: done
 use-cases:
 - SUC-002
 - SUC-006
