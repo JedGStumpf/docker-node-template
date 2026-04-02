@@ -115,6 +115,9 @@ export class SchedulerService {
     const defaults = [
       { name: 'daily-backup', frequency: 'daily' },
       { name: 'weekly-backup', frequency: 'weekly' },
+      { name: 'assignment-reminders', frequency: 'hourly' },
+      { name: 'registration-digest', frequency: 'daily' },
+      { name: 'deadline-check', frequency: 'hourly' },
     ];
     for (const def of defaults) {
       await this.prisma.scheduledJob.upsert({

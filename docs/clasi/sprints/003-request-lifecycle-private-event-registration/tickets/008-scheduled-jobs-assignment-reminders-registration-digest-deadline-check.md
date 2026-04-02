@@ -1,7 +1,7 @@
 ---
 id: "008"
 title: "Scheduled jobs — assignment reminders, registration digest, deadline check"
-status: todo
+status: done
 use-cases: [SUC-008, SUC-009]
 depends-on: [003, 004, 007]
 github-issue: ""
@@ -27,19 +27,19 @@ Register three new scheduled jobs with `SchedulerService` at app startup. Each j
 
 ## Acceptance Criteria
 
-- [ ] `assignment-reminders` handler registered and seeded as hourly job
-- [ ] `registration-digest` handler registered and seeded as daily job
-- [ ] `deadline-check` handler registered and seeded as hourly job
-- [ ] Assignment reminders: sends reminder for pending assignments past threshold, increments `reminderCount`
-- [ ] Assignment reminders: times out stale assignments and advances to next instructor
-- [ ] Assignment reminders: notifies admin when no candidates remain
-- [ ] Registration digest: generates correct summary for events in `dates_proposed`
-- [ ] Registration digest: skips events without `emailThreadAddress` or 0 registrations
-- [ ] Registration digest: sends summary to the email thread address
-- [ ] Deadline check: finds expired-deadline requests and runs threshold check
-- [ ] Deadline check: sends deadline-expired notification when no date meets threshold
-- [ ] Deadline check: does NOT affect requests with future deadline or already-confirmed requests
-- [ ] Existing backup jobs (`daily-backup`, `weekly-backup`) are unaffected
+- [x] `assignment-reminders` handler registered and seeded as hourly job
+- [x] `registration-digest` handler registered and seeded as daily job
+- [x] `deadline-check` handler registered and seeded as hourly job
+- [x] Assignment reminders: sends reminder for pending assignments past threshold, increments `reminderCount`
+- [x] Assignment reminders: times out stale assignments and advances to next instructor
+- [x] Assignment reminders: notifies admin when no candidates remain
+- [x] Registration digest: generates correct summary for events in `dates_proposed`
+- [x] Registration digest: skips events without `emailThreadAddress` or 0 registrations
+- [x] Registration digest: sends summary to the email thread address
+- [x] Deadline check: finds expired-deadline requests and runs threshold check
+- [x] Deadline check: sends deadline-expired notification when no date meets threshold
+- [x] Deadline check: does NOT affect requests with future deadline or already-confirmed requests
+- [x] Existing backup jobs (`daily-backup`, `weekly-backup`) are unaffected
 
 ## Testing
 
