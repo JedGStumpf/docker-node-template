@@ -58,8 +58,8 @@ describe('Admin requests v2 client flow', () => {
     });
   });
 
-  it('loads request detail and updates status', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+  it('loads request detail and shows status transition buttons', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.endsWith('/api/admin/requests/req-42')) {
         return {
@@ -77,7 +77,7 @@ describe('Admin requests v2 client flow', () => {
           }),
         } as Response;
       }
-      if (url.endsWith('/api/admin/requests/req-42/status') && init?.method === 'PUT') {
+      if (url.endsWith('/api/admin/requests/req-42/status')) {
         return {
           ok: true,
           json: async () => ({
@@ -86,7 +86,7 @@ describe('Admin requests v2 client flow', () => {
             requesterEmail: 'alice@example.com',
             classSlug: 'python-intro',
             zipCode: '90210',
-            status: 'dates_proposed',
+            status: 'discussing',
             emailThreadAddress: 'req-42@threads.example.org',
             asanaTaskId: 'task-42',
             site: { id: 1, name: 'Central Library' },
@@ -110,11 +110,37 @@ describe('Admin requests v2 client flow', () => {
       expect(screen.getByText(/Alice/)).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'scheduled' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Update Status' }));
+    // Status 'new' should show 'Start Discussing' and 'Cancel' buttons
+    expect(screen.getByRole('button', { name: 'Start Discussing' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+
+    // Click to transition
+    fireEvent.click(screen.getByRole('button', { name: 'Start Discussing' }));
 
     await waitFor(() => {
       expect(screen.getByText('Status updated')).toBeInTheDocument();
     });
+  });
+
+  it('shows all lifecycle status filter tabs', () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ requests: [], total: 0 }),
+    }));
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(
+      <MemoryRouter>
+        <AdminRequests />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Discussing' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dates Proposed' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirmed' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Completed' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancelled' })).toBeInTheDocument();
   });
 });

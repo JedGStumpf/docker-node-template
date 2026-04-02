@@ -127,25 +127,135 @@ adminRequestsRouter.get('/requests/:id', requirePike13Admin, async (req: Request
 
 adminRequestsRouter.put('/requests/:id/status', requirePike13Admin, async (req: Request, res: Response) => {
   try {
-    const prisma = req.services.prisma;
     const rawStatus = String(req.body?.status || '').trim();
     const mappedStatus = rawStatus === 'scheduled' ? 'dates_proposed' : rawStatus;
-    const allowedStatuses = new Set(['cancelled', 'discussing', 'dates_proposed', 'new']);
 
-    if (!allowedStatuses.has(mappedStatus)) {
-      return res.status(400).json({ error: 'Invalid status' });
+    if (!mappedStatus) {
+      return res.status(400).json({ error: 'status is required' });
     }
 
-    try {
-      const updated = await prisma.eventRequest.update({
-        where: { id: req.params.id },
-        data: { status: mappedStatus },
-      });
-      return res.json(updated);
-    } catch {
+    const transitionData: any = {};
+    if (req.body?.proposedDates) transitionData.proposedDates = req.body.proposedDates;
+    if (req.body?.minHeadcount != null) transitionData.minHeadcount = req.body.minHeadcount;
+    if (req.body?.votingDeadline) transitionData.votingDeadline = req.body.votingDeadline;
+
+    const updated = await req.services.requests.transitionStatus(
+      req.params.id,
+      mappedStatus,
+      Object.keys(transitionData).length > 0 ? transitionData : undefined,
+      req.services.email,
+    );
+    return res.json(updated);
+  } catch (err: any) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Failed to update request status', detail: err.message });
+  }
+});
+
+/** PUT /api/admin/requests/:id — Update event configuration fields */
+adminRequestsRouter.put('/requests/:id', requirePike13Admin, async (req: Request, res: Response) => {
+  try {
+    const requestRecord = await req.services.requests.getRequest(req.params.id);
+    if (!requestRecord) {
       return res.status(404).json({ error: 'Request not found' });
     }
+
+    const updateData: Record<string, any> = {};
+
+    // minHeadcount
+    if (req.body?.minHeadcount != null) {
+      const mc = Number(req.body.minHeadcount);
+      if (!Number.isInteger(mc) || mc < 1) {
+        return res.status(400).json({ error: 'minHeadcount must be an integer ≥ 1' });
+      }
+      updateData.minHeadcount = mc;
+    }
+
+    // votingDeadline
+    if (req.body?.votingDeadline) {
+      const deadline = new Date(req.body.votingDeadline);
+      if (isNaN(deadline.getTime()) || deadline <= new Date()) {
+        return res.status(400).json({ error: 'votingDeadline must be a valid future date' });
+      }
+      updateData.votingDeadline = deadline;
+    }
+
+    // eventType
+    if (req.body?.eventType) {
+      if (!['private', 'public'].includes(req.body.eventType)) {
+        return res.status(400).json({ error: 'eventType must be "private" or "public"' });
+      }
+      updateData.eventType = req.body.eventType;
+    }
+
+    // proposedDates — only allowed when status is discussing or dates_proposed
+    if (req.body?.proposedDates) {
+      if (!['discussing', 'dates_proposed'].includes(requestRecord.status)) {
+        return res.status(422).json({ error: 'proposedDates can only be updated in discussing or dates_proposed status' });
+      }
+      if (!Array.isArray(req.body.proposedDates) || req.body.proposedDates.length === 0) {
+        return res.status(400).json({ error: 'proposedDates must be a non-empty array' });
+      }
+      updateData.proposedDates = req.body.proposedDates;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const updated = await req.services.prisma.eventRequest.update({
+      where: { id: req.params.id },
+      data: updateData,
+      include: { site: true },
+    });
+
+    return res.json(updated);
   } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to update request status', detail: err.message });
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Failed to update request', detail: err.message });
+  }
+});
+
+/** POST /api/admin/requests/:id/finalize-date — Manually finalize a date */
+adminRequestsRouter.post('/requests/:id/finalize-date', requirePike13Admin, async (req: Request, res: Response) => {
+  try {
+    const { date } = req.body || {};
+    if (!date || typeof date !== 'string') {
+      return res.status(400).json({ error: 'date is required' });
+    }
+
+    const requestRecord = await req.services.requests.getRequest(req.params.id);
+    if (!requestRecord) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    if (requestRecord.status !== 'dates_proposed') {
+      return res.status(422).json({ error: 'Request must be in dates_proposed status to finalize' });
+    }
+
+    const proposedDates: string[] = Array.isArray(requestRecord.proposedDates)
+      ? requestRecord.proposedDates
+      : [];
+    if (!proposedDates.includes(date)) {
+      return res.status(422).json({ error: 'Date is not one of the proposed dates' });
+    }
+
+    const result = await req.services.registration.finalizeDate(
+      req.params.id,
+      date,
+      req.services.requests,
+      req.services.email,
+    );
+
+    return res.json(result);
+  } catch (err: any) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Failed to finalize date', detail: err.message });
   }
 });

@@ -84,13 +84,23 @@ export class InstructorService {
     }
 
     const newStatus = response === 'accept' ? 'accepted' : 'declined';
-    return this.prisma.instructorAssignment.update({
+    const updated = await this.prisma.instructorAssignment.update({
       where: { id: assignmentId },
       data: {
         status: newStatus,
         respondedAt: new Date(),
       },
     });
+
+    // Denormalise: set assignedInstructorId on EventRequest
+    if (response === 'accept') {
+      await this.prisma.eventRequest.update({
+        where: { id: assignment.requestId },
+        data: { assignedInstructorId: assignment.instructorId },
+      });
+    }
+
+    return updated;
   }
 
   async sendReminders(emailService: any, matchingService: any) {
@@ -110,16 +120,17 @@ export class InstructorService {
     });
 
     for (const assignment of pendingAssignments) {
-      const notifiedAt = assignment.notifiedAt || assignment.createdAt;
-      const elapsedMs = now.getTime() - new Date(notifiedAt).getTime();
-      const elapsedHours = elapsedMs / (1000 * 60 * 60);
+      // Use timeoutAt for timeout detection (Sprint 3 enhancement)
+      const isTimedOut = assignment.timeoutAt
+        ? new Date(assignment.timeoutAt) < now
+        : (() => {
+            const firstNotifiedAt = assignment.notifiedAt || assignment.createdAt;
+            const totalElapsedHours =
+              (now.getTime() - new Date(firstNotifiedAt).getTime()) / (1000 * 60 * 60);
+            return totalElapsedHours >= timeoutHours;
+          })();
 
-      // Check timeout
-      const firstNotifiedAt = assignment.notifiedAt || assignment.createdAt;
-      const totalElapsedHours =
-        (now.getTime() - new Date(firstNotifiedAt).getTime()) / (1000 * 60 * 60);
-
-      if (totalElapsedHours >= timeoutHours) {
+      if (isTimedOut) {
         // Mark as timed out and advance to next instructor
         await this.prisma.instructorAssignment.update({
           where: { id: assignment.id },
@@ -197,6 +208,7 @@ export class InstructorService {
     // Create new assignment for next candidate
     const next = candidates[0];
     const notificationToken = crypto.randomUUID();
+    const assignmentTimeoutHours = Number(process.env.ASSIGNMENT_TIMEOUT_HOURS) || 48;
     const newAssignment = await this.prisma.instructorAssignment.create({
       data: {
         requestId: request.id,
@@ -204,6 +216,7 @@ export class InstructorService {
         status: 'pending',
         notificationToken,
         notifiedAt: new Date(),
+        timeoutAt: new Date(Date.now() + assignmentTimeoutHours * 3600_000),
       },
     });
 

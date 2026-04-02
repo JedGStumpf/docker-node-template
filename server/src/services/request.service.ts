@@ -2,6 +2,7 @@
  * RequestService — manages EventRequest lifecycle.
  */
 
+import crypto from 'crypto';
 import { ulid } from 'ulid';
 import { ServiceError } from '../errors';
 
@@ -21,7 +22,30 @@ export interface CreateRequestInput {
   registeredSiteId?: number;
 }
 
+export interface TransitionData {
+  proposedDates?: string[];
+  minHeadcount?: number;
+  votingDeadline?: string; // ISO date
+  confirmedDate?: string;  // ISO date — set by finalization
+}
+
 const DEFAULT_VERIFICATION_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+const DEFAULT_MIN_HEADCOUNT = Number(process.env.DEFAULT_MIN_HEADCOUNT) || 10;
+const DEFAULT_VOTING_DEADLINE_DAYS = Number(process.env.DEFAULT_VOTING_DEADLINE_DAYS) || 7;
+
+/**
+ * Valid status transitions. Key = from status, value = set of allowed target statuses.
+ */
+const VALID_TRANSITIONS: Record<string, Set<string>> = {
+  unverified: new Set(['new']),
+  new: new Set(['discussing', 'cancelled']),
+  discussing: new Set(['dates_proposed', 'cancelled']),
+  dates_proposed: new Set(['confirmed', 'cancelled']),
+  confirmed: new Set(['completed', 'cancelled']),
+  // Terminal states — no transitions out
+  completed: new Set(),
+  cancelled: new Set(),
+};
 
 export class RequestService {
   constructor(private prisma: any) {}
@@ -137,6 +161,7 @@ export class RequestService {
           ? request.preferredDates
           : [];
 
+        const assignmentTimeoutHours = Number(process.env.ASSIGNMENT_TIMEOUT_HOURS) || 48;
         for (const candidate of candidates) {
           const notificationToken = crypto.randomUUID();
           const assignment = await this.prisma.instructorAssignment.create({
@@ -146,6 +171,7 @@ export class RequestService {
               status: 'pending',
               notificationToken,
               notifiedAt: new Date(),
+              timeoutAt: new Date(Date.now() + assignmentTimeoutHours * 3600_000),
             },
           });
 
@@ -225,5 +251,140 @@ export class RequestService {
       },
     });
     return result.count;
+  }
+
+  /**
+   * Validate and apply a status transition with side effects.
+   * Returns the updated EventRequest record.
+   */
+  async transitionStatus(
+    requestId: string,
+    newStatus: string,
+    data?: TransitionData,
+    emailService?: any,
+  ) {
+    const request = await this.prisma.eventRequest.findUnique({
+      where: { id: requestId },
+      include: { site: true },
+    });
+    if (!request) {
+      throw new ServiceError('Request not found', 404);
+    }
+
+    const currentStatus = request.status;
+
+    // Validate transition
+    const allowed = VALID_TRANSITIONS[currentStatus];
+    if (!allowed || !allowed.has(newStatus)) {
+      // Idempotent: same status on non-terminal states → return as-is
+      if (currentStatus === newStatus && allowed && allowed.size > 0) {
+        return request;
+      }
+      throw new ServiceError(
+        `Invalid transition: ${currentStatus} → ${newStatus}`,
+        422,
+      );
+    }
+
+    // Build update payload
+    const updateData: Record<string, any> = { status: newStatus };
+
+    // Side effects per transition
+    if (newStatus === 'dates_proposed') {
+      // Generate registration token if not already present
+      if (!request.registrationToken) {
+        updateData.registrationToken = crypto.randomBytes(32).toString('hex');
+      }
+      // Store proposed dates (required)
+      if (data?.proposedDates && data.proposedDates.length > 0) {
+        updateData.proposedDates = data.proposedDates;
+      } else if (!request.proposedDates || request.proposedDates.length === 0) {
+        throw new ServiceError(
+          'proposedDates are required when transitioning to dates_proposed',
+          422,
+        );
+      }
+      // Set defaults for minHeadcount and votingDeadline if not provided
+      if (data?.minHeadcount != null) {
+        updateData.minHeadcount = data.minHeadcount;
+      } else if (request.minHeadcount == null) {
+        updateData.minHeadcount = DEFAULT_MIN_HEADCOUNT;
+      }
+      if (data?.votingDeadline) {
+        updateData.votingDeadline = new Date(data.votingDeadline);
+      } else if (request.votingDeadline == null) {
+        updateData.votingDeadline = new Date(
+          Date.now() + DEFAULT_VOTING_DEADLINE_DAYS * 24 * 60 * 60 * 1000,
+        );
+      }
+    }
+
+    if (newStatus === 'confirmed' && data?.confirmedDate) {
+      updateData.confirmedDate = new Date(data.confirmedDate);
+    }
+
+    const updated = await this.prisma.eventRequest.update({
+      where: { id: requestId },
+      data: updateData,
+      include: { site: true, registrations: true },
+    });
+
+    // Side effect: Send cancellation emails after transition to cancelled
+    if (newStatus === 'cancelled' && emailService) {
+      const eventDetails = {
+        title: updated.classSlug,
+        requestId: updated.id,
+        replyTo: updated.emailThreadAddress || undefined,
+      };
+      const recipients: string[] = [];
+
+      // Requester
+      if (updated.requesterEmail) {
+        recipients.push(updated.requesterEmail);
+      }
+
+      // Assigned instructor
+      if (updated.assignedInstructorId) {
+        try {
+          const instructor = await this.prisma.instructorProfile.findUnique({
+            where: { id: updated.assignedInstructorId },
+          });
+          if (instructor?.email) {
+            recipients.push(instructor.email);
+          }
+        } catch { /* continue */ }
+      }
+
+      // Site rep
+      if (updated.registeredSiteId) {
+        try {
+          const siteRep = await this.prisma.siteRep.findFirst({
+            where: { registeredSiteId: updated.registeredSiteId },
+          });
+          if (siteRep?.email) {
+            recipients.push(siteRep.email);
+          }
+        } catch { /* continue */ }
+      }
+
+      // Registrants
+      if (updated.registrations?.length) {
+        for (const reg of updated.registrations) {
+          if (reg.attendeeEmail) {
+            recipients.push(reg.attendeeEmail);
+          }
+        }
+      }
+
+      // Deduplicate and send
+      const uniqueRecipients = [...new Set(recipients)];
+      for (const to of uniqueRecipients) {
+        try {
+          await emailService.sendCancellationNotification(to, eventDetails);
+        } catch { /* continue even if one email fails */ }
+      }
+    }
+
+    return updated;
   }
 }

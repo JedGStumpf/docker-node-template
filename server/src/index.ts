@@ -24,6 +24,48 @@ initPrisma().then(() => initConfigCache()).then(async () => {
   registry.scheduler.registerHandler('weekly-backup', async () => {
     await registry.backups.createBackup();
   });
+  registry.scheduler.registerHandler('assignment-reminders', async () => {
+    await registry.instructors.sendReminders(registry.email, registry.matching);
+  });
+  registry.scheduler.registerHandler('registration-digest', async () => {
+    const requests = await prisma.eventRequest.findMany({
+      where: { status: 'dates_proposed' },
+      include: { registrations: true },
+    });
+    for (const req of requests) {
+      if (!req.emailThreadAddress) continue;
+      if (!req.registrations || req.registrations.length === 0) continue;
+      const proposedDates: string[] = Array.isArray(req.proposedDates) ? req.proposedDates : [];
+      const digestHtml = registry.registration.generateDigest(req.registrations, proposedDates);
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@jointheleague.org';
+      await registry.email.sendRegistrationDigest(adminEmail, req.emailThreadAddress, digestHtml);
+    }
+  });
+  registry.scheduler.registerHandler('deadline-check', async () => {
+    const now = new Date();
+    const expiredRequests = await prisma.eventRequest.findMany({
+      where: {
+        status: 'dates_proposed',
+        votingDeadline: { lt: now },
+      },
+    });
+    for (const req of expiredRequests) {
+      const result = await registry.registration.checkAndFinalizeThreshold(req.id);
+      if (!result) {
+        // No date met threshold — notify requester and admin
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@jointheleague.org';
+        const eventDetails = {
+          title: req.classSlug,
+          requestId: req.id,
+          replyTo: req.emailThreadAddress || undefined,
+        };
+        if (req.requesterEmail) {
+          await registry.email.sendDeadlineExpiredNotification(req.requesterEmail, eventDetails);
+        }
+        await registry.email.sendDeadlineExpiredNotification(adminEmail, eventDetails);
+      }
+    }
+  });
   registry.scheduler.startTicking();
 
   // Sprint 1: Background jobs — not registered in test env
@@ -36,15 +78,6 @@ initPrisma().then(() => initConfigCache()).then(async () => {
         console.error('expireUnverified job failed:', err);
       }
     }, expiryIntervalMs);
-
-    const reminderIntervalMs = Number(process.env.REMINDER_INTERVAL_MS) || 15 * 60 * 1000;
-    setInterval(async () => {
-      try {
-        await registry.instructors.sendReminders(registry.email, registry.matching);
-      } catch (err) {
-        console.error('sendReminders job failed:', err);
-      }
-    }, reminderIntervalMs);
   }
 
   app.listen(port, '0.0.0.0', () => {

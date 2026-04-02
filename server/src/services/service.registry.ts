@@ -24,6 +24,7 @@ import { MockPike13Client, RealPike13Client, type IPike13Client } from './pike13
 import { SiteService } from './site.service';
 import { AsanaService } from './asana.service';
 import { MockAsanaClient, RealAsanaClient } from './asana.client';
+import { RegistrationService } from './registration.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -44,6 +45,7 @@ export class ServiceRegistry {
   readonly email: EmailService;
   readonly sites: SiteService;
   readonly asana: AsanaService;
+  readonly registration: RegistrationService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -83,6 +85,8 @@ export class ServiceRegistry {
     } else {
       this.asana = new AsanaService(new MockAsanaClient());
     }
+
+    this.registration = new RegistrationService(defaultPrisma);
   }
 
   static create(source?: ServiceSource): ServiceRegistry {
@@ -116,6 +120,7 @@ export class ServiceRegistry {
     await p.roleAssignmentPattern.deleteMany();
     // Sprint 1 models (FK-safe order)
     try {
+      await p.registration.deleteMany();
       await p.siteRepSession.deleteMany();
       await p.siteRep.deleteMany();
       await p.siteInvitation.deleteMany();

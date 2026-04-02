@@ -10,6 +10,7 @@ async function seedJobs() {
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 86400000);
   const nextWeek = new Date(now.getTime() + 7 * 86400000);
+  const nextHour = new Date(now.getTime() + 3600000);
 
   await prisma.scheduledJob.upsert({
     where: { name: 'daily-backup' },
@@ -19,6 +20,21 @@ async function seedJobs() {
   await prisma.scheduledJob.upsert({
     where: { name: 'weekly-backup' },
     create: { name: 'weekly-backup', frequency: 'weekly', enabled: true, nextRun: nextWeek },
+    update: {},
+  });
+  await prisma.scheduledJob.upsert({
+    where: { name: 'assignment-reminders' },
+    create: { name: 'assignment-reminders', frequency: 'hourly', enabled: true, nextRun: nextHour },
+    update: {},
+  });
+  await prisma.scheduledJob.upsert({
+    where: { name: 'registration-digest' },
+    create: { name: 'registration-digest', frequency: 'daily', enabled: true, nextRun: tomorrow },
+    update: {},
+  });
+  await prisma.scheduledJob.upsert({
+    where: { name: 'deadline-check' },
+    create: { name: 'deadline-check', frequency: 'hourly', enabled: true, nextRun: nextHour },
     update: {},
   });
 }
@@ -54,6 +70,14 @@ describe('Admin Scheduler API', () => {
     const names = res.body.map((j: any) => j.name);
     expect(names).toContain('daily-backup');
     expect(names).toContain('weekly-backup');
+  });
+
+  it('lists sprint-003 scheduled jobs', async () => {
+    const res = await adminAgent.get('/api/admin/scheduler/jobs');
+    const names = res.body.map((j: any) => j.name);
+    expect(names).toContain('assignment-reminders');
+    expect(names).toContain('registration-digest');
+    expect(names).toContain('deadline-check');
   });
 
   it('PUT toggles enabled/disabled', async () => {

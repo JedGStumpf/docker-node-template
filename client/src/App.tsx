@@ -23,6 +23,7 @@ import PermissionsPanel from './pages/admin/PermissionsPanel';
 import ScheduledJobsPanel from './pages/admin/ScheduledJobsPanel';
 import ImportExport from './pages/admin/ImportExport';
 import UsersPanel from './pages/admin/UsersPanel';
+import EventPage from './pages/EventPage';
 
 function App() {
   return (
@@ -34,6 +35,9 @@ function App() {
 
           {/* Admin login (standalone, no layout) */}
           <Route path="/admin" element={<AdminLogin />} />
+
+          {/* Public event registration (no auth required) */}
+          <Route path="/events/:requestId" element={<EventPage />} />
 
           {/* All authenticated routes share AppLayout (sidebar + topbar) */}
           <Route element={<AppLayout />}>
