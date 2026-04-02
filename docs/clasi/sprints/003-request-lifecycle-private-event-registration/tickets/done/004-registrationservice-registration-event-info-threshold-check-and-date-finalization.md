@@ -1,11 +1,16 @@
 ---
-id: "004"
-title: "RegistrationService — registration, event info, threshold check, and date finalization"
-status: todo
-use-cases: [SUC-003, SUC-004]
-depends-on: [002, 003]
-github-issue: ""
-todo: ""
+id: '004'
+title: "RegistrationService \u2014 registration, event info, threshold check, and\
+  \ date finalization"
+status: done
+use-cases:
+- SUC-003
+- SUC-004
+depends-on:
+- 2
+- 3
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
