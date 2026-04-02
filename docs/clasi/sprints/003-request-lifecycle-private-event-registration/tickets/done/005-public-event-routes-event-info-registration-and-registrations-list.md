@@ -1,11 +1,13 @@
 ---
-id: "005"
-title: "Public event routes — event info, registration, and registrations list"
-status: todo
-use-cases: [SUC-003]
-depends-on: [004]
-github-issue: ""
-todo: ""
+id: '005'
+title: "Public event routes \u2014 event info, registration, and registrations list"
+status: done
+use-cases:
+- SUC-003
+depends-on:
+- 4
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
