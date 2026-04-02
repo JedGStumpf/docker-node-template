@@ -161,6 +161,7 @@ export class RequestService {
           ? request.preferredDates
           : [];
 
+        const assignmentTimeoutHours = Number(process.env.ASSIGNMENT_TIMEOUT_HOURS) || 48;
         for (const candidate of candidates) {
           const notificationToken = crypto.randomUUID();
           const assignment = await this.prisma.instructorAssignment.create({
@@ -170,6 +171,7 @@ export class RequestService {
               status: 'pending',
               notificationToken,
               notifiedAt: new Date(),
+              timeoutAt: new Date(Date.now() + assignmentTimeoutHours * 3600_000),
             },
           });
 

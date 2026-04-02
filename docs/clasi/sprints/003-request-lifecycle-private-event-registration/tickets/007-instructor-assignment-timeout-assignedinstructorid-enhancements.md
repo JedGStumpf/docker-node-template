@@ -1,7 +1,7 @@
 ---
 id: "007"
 title: "Instructor assignment timeout & assignedInstructorId enhancements"
-status: todo
+status: done
 use-cases: [SUC-008]
 depends-on: [001]
 github-issue: ""
@@ -33,14 +33,14 @@ Modify `InstructorService` and `RequestService` to use the new `timeoutAt` field
 
 ## Acceptance Criteria
 
-- [ ] New `InstructorAssignment` records have `timeoutAt` set to `now + ASSIGNMENT_TIMEOUT_HOURS`
-- [ ] `advanceToNextInstructor()` sets `timeoutAt` on the new assignment
-- [ ] `handleAssignmentResponse('accept')` sets `assignedInstructorId` on EventRequest
-- [ ] `sendReminders()` uses `timeoutAt` for timeout detection
-- [ ] Timed-out assignments get `status: timed_out` and advance to next instructor
-- [ ] If no next instructor candidate exists, admin is notified
-- [ ] `verifyRequest()` sets `timeoutAt` on the initial assignment
-- [ ] Existing consent flow and instructor matching tests still pass
+- [x] New `InstructorAssignment` records have `timeoutAt` set to `now + ASSIGNMENT_TIMEOUT_HOURS`
+- [x] `advanceToNextInstructor()` sets `timeoutAt` on the new assignment
+- [x] `handleAssignmentResponse('accept')` sets `assignedInstructorId` on EventRequest
+- [x] `sendReminders()` uses `timeoutAt` for timeout detection
+- [x] Timed-out assignments get `status: timed_out` and advance to next instructor
+- [x] If no next instructor candidate exists, admin is notified
+- [x] `verifyRequest()` sets `timeoutAt` on the initial assignment
+- [x] Existing consent flow and instructor matching tests still pass
 
 ## Testing
 
