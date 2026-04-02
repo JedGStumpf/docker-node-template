@@ -1,7 +1,7 @@
 ---
-id: "003"
-title: "Request Lifecycle & Private Event Registration"
-status: planning
+id: '003'
+title: Request Lifecycle & Private Event Registration
+status: done
 branch: sprint/003-request-lifecycle-private-event-registration
 use-cases:
 - SUC-001
