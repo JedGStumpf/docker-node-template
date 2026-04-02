@@ -1,11 +1,21 @@
 ---
-id: "001"
-title: "Prisma schema migration — Registration model, EventRequest & InstructorAssignment extensions"
-status: todo
-use-cases: [SUC-001, SUC-002, SUC-003, SUC-004, SUC-005, SUC-006, SUC-007, SUC-008, SUC-009]
+id: '001'
+title: "Prisma schema migration \u2014 Registration model, EventRequest & InstructorAssignment\
+  \ extensions"
+status: in-progress
+use-cases:
+- SUC-001
+- SUC-002
+- SUC-003
+- SUC-004
+- SUC-005
+- SUC-006
+- SUC-007
+- SUC-008
+- SUC-009
 depends-on: []
-github-issue: ""
-todo: ""
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 

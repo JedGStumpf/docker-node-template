@@ -116,6 +116,7 @@ export class ServiceRegistry {
     await p.roleAssignmentPattern.deleteMany();
     // Sprint 1 models (FK-safe order)
     try {
+      await p.registration.deleteMany();
       await p.siteRepSession.deleteMany();
       await p.siteRep.deleteMany();
       await p.siteInvitation.deleteMany();

@@ -134,6 +134,7 @@ model InstructorProfile {
   updatedAt        DateTime  @updatedAt
 
   assignments      InstructorAssignment[]
+  assignedRequests EventRequest[]  @relation("AssignedInstructor")
 }
 
 model EventRequest {
@@ -156,12 +157,25 @@ model EventRequest {
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
 
+  // Sprint 2 fields
   assignments             InstructorAssignment[]
   registeredSiteId        Int?
   emailThreadAddress      String?
   asanaTaskId             String?
 
   site                    RegisteredSite? @relation(fields: [registeredSiteId], references: [id])
+
+  // Sprint 3 fields — Request Lifecycle & Private Event Registration
+  eventType               String         @default("private")
+  minHeadcount            Int?
+  votingDeadline          DateTime?
+  confirmedDate           DateTime?
+  registrationToken       String?        @unique
+  proposedDates           String[]       @default([])
+  assignedInstructorId    Int?
+
+  assignedInstructor      InstructorProfile? @relation("AssignedInstructor", fields: [assignedInstructorId], references: [id])
+  registrations           Registration[]
 }
 
 model InstructorAssignment {
@@ -174,6 +188,7 @@ model InstructorAssignment {
   respondedAt       DateTime?
   reminderCount     Int              @default(0)
   lastReminderAt    DateTime?
+  timeoutAt         DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -237,4 +252,21 @@ model SiteRepSession {
   createdAt  DateTime @default(now())
 
   siteRep    SiteRep  @relation(fields: [siteRepId], references: [id], onDelete: Cascade)
+}
+
+// ── Sprint 3: Request Lifecycle & Private Event Registration ────────────────
+
+model Registration {
+  id              String   @id @default(uuid())
+  requestId       String
+  attendeeName    String
+  attendeeEmail   String
+  numberOfKids    Int
+  availableDates  String[]   @default([])
+  status          String     @default("interested")
+  createdAt       DateTime   @default(now())
+
+  request         EventRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, attendeeEmail])
 }
