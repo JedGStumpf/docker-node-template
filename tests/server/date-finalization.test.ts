@@ -201,3 +201,118 @@ describe('Date finalization', () => {
     });
   });
 });
+
+// ── Ticket 006: Admin event configuration & manual finalization route tests ──
+
+import request from 'supertest';
+process.env.NODE_ENV = 'test';
+import app from '../../server/src/app';
+
+describe('Admin event configuration routes', () => {
+  async function loginAdmin() {
+    const agent = request.agent(app);
+    await agent
+      .post('/api/auth/test-login')
+      .send({ pike13UserId: 'admin-finalize', role: 'admin', displayName: 'Finalize Admin' })
+      .expect(200);
+    return agent;
+  }
+
+  describe('PUT /api/admin/requests/:id', () => {
+    it('updates minHeadcount and eventType', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest();
+
+      const res = await admin
+        .put(`/api/admin/requests/${req.id}`)
+        .send({ minHeadcount: 8, eventType: 'public' })
+        .expect(200);
+
+      expect(res.body.minHeadcount).toBe(8);
+      expect(res.body.eventType).toBe('public');
+    });
+
+    it('rejects invalid minHeadcount', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest();
+
+      await admin
+        .put(`/api/admin/requests/${req.id}`)
+        .send({ minHeadcount: -1 })
+        .expect(400);
+    });
+
+    it('rejects proposedDates update when status is confirmed', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest({ status: 'confirmed' });
+
+      await admin
+        .put(`/api/admin/requests/${req.id}`)
+        .send({ proposedDates: ['2026-07-01'] })
+        .expect(422);
+    });
+
+    it('requires admin auth', async () => {
+      const req = await seedRequest();
+      await request(app)
+        .put(`/api/admin/requests/${req.id}`)
+        .send({ minHeadcount: 10 })
+        .expect(401);
+    });
+  });
+
+  describe('POST /api/admin/requests/:id/finalize-date', () => {
+    it('manually finalizes a proposed date', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest();
+      await prisma.registration.create({
+        data: {
+          requestId: req.id,
+          attendeeName: 'Manual',
+          attendeeEmail: 'manual@example.com',
+          numberOfKids: 1,
+          availableDates: ['2026-06-15'],
+        },
+      });
+
+      const res = await admin
+        .post(`/api/admin/requests/${req.id}/finalize-date`)
+        .send({ date: '2026-06-15' })
+        .expect(200);
+
+      expect(res.body.status).toBe('confirmed');
+    });
+
+    it('returns 422 for date not in proposed dates', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest();
+
+      await admin
+        .post(`/api/admin/requests/${req.id}/finalize-date`)
+        .send({ date: '2099-01-01' })
+        .expect(422);
+    });
+
+    it('returns 422 when request not in dates_proposed', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest({ status: 'discussing' });
+
+      await admin
+        .post(`/api/admin/requests/${req.id}/finalize-date`)
+        .send({ date: '2026-06-15' })
+        .expect(422);
+    });
+
+    it('admin can finalize even if headcount threshold not met', async () => {
+      const admin = await loginAdmin();
+      const req = await seedRequest({ minHeadcount: 100 }); // Very high threshold
+
+      const res = await admin
+        .post(`/api/admin/requests/${req.id}/finalize-date`)
+        .send({ date: '2026-06-15' })
+        .expect(200);
+
+      expect(res.body.status).toBe('confirmed');
+    });
+  });
+});
