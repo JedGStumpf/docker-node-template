@@ -1,7 +1,7 @@
 ---
 id: "009"
 title: "Client — public event page & registration form"
-status: todo
+status: done
 use-cases: [SUC-003, SUC-006, SUC-007]
 depends-on: [005]
 github-issue: ""
@@ -43,16 +43,16 @@ Build the public-facing React components for the private event registration flow
 
 ## Acceptance Criteria
 
-- [ ] `/events/:requestId?token=...` route exists in client router
-- [ ] Event info page displays class name, description, location, proposed dates with vote tallies
-- [ ] Registration form collects name, email, number of kids, and date preferences
-- [ ] Date checkboxes match the proposed dates from the API
-- [ ] At least one date must be selected before submit
-- [ ] Successful registration shows confirmation message
-- [ ] Duplicate email (409) shows "You've already registered for this event"
-- [ ] Invalid token (401) shows descriptive error
-- [ ] Registration closed (422) shows descriptive error
-- [ ] Form validates required fields client-side before submission
+- [x] `/events/:requestId?token=...` route exists in client router
+- [x] Event info page displays class name, description, location, proposed dates with vote tallies
+- [x] Registration form collects name, email, number of kids, and date preferences
+- [x] Date checkboxes match the proposed dates from the API
+- [x] At least one date must be selected before submit
+- [x] Successful registration shows confirmation message
+- [x] Duplicate email (409) shows "You've already registered for this event"
+- [x] Invalid token (401) shows descriptive error
+- [x] Registration closed (422) shows descriptive error
+- [x] Form validates required fields client-side before submission
 
 ## Testing
 
