@@ -74,11 +74,21 @@ describe('Admin requests v2 routes', () => {
     const rec = await seedRequest({ status: 'new', requesterName: 'Status Requester' });
     const agent = await loginPike13Admin();
 
-    const ok = await agent.put(`/api/admin/requests/${rec.id}/status`).send({ status: 'scheduled' });
+    // Valid transition: new → discussing
+    const ok = await agent.put(`/api/admin/requests/${rec.id}/status`).send({ status: 'discussing' });
     expect(ok.status).toBe(200);
-    expect(ok.body.status).toBe('dates_proposed');
+    expect(ok.body.status).toBe('discussing');
 
+    // Valid transition: discussing → dates_proposed (via 'scheduled' alias)
+    const ok2 = await agent.put(`/api/admin/requests/${rec.id}/status`).send({
+      status: 'scheduled',
+      proposedDates: ['2026-07-01'],
+    });
+    expect(ok2.status).toBe(200);
+    expect(ok2.body.status).toBe('dates_proposed');
+
+    // Invalid status value
     const bad = await agent.put(`/api/admin/requests/${rec.id}/status`).send({ status: 'invalid-status' });
-    expect(bad.status).toBe(400);
+    expect(bad.status).toBe(422);
   });
 });

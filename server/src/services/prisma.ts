@@ -10,7 +10,7 @@ export function isSqlite(): boolean {
 // Maps model name -> list of array field names.
 const SQLITE_ARRAY_FIELDS: Record<string, string[]> = {
   InstructorProfile: ['topics', 'serviceZips'],
-  EventRequest: ['preferredDates'],
+  EventRequest: ['preferredDates', 'proposedDates'],
 };
 
 /**

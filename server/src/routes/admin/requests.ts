@@ -127,25 +127,28 @@ adminRequestsRouter.get('/requests/:id', requirePike13Admin, async (req: Request
 
 adminRequestsRouter.put('/requests/:id/status', requirePike13Admin, async (req: Request, res: Response) => {
   try {
-    const prisma = req.services.prisma;
     const rawStatus = String(req.body?.status || '').trim();
     const mappedStatus = rawStatus === 'scheduled' ? 'dates_proposed' : rawStatus;
-    const allowedStatuses = new Set(['cancelled', 'discussing', 'dates_proposed', 'new']);
 
-    if (!allowedStatuses.has(mappedStatus)) {
-      return res.status(400).json({ error: 'Invalid status' });
+    if (!mappedStatus) {
+      return res.status(400).json({ error: 'status is required' });
     }
 
-    try {
-      const updated = await prisma.eventRequest.update({
-        where: { id: req.params.id },
-        data: { status: mappedStatus },
-      });
-      return res.json(updated);
-    } catch {
-      return res.status(404).json({ error: 'Request not found' });
-    }
+    const transitionData: any = {};
+    if (req.body?.proposedDates) transitionData.proposedDates = req.body.proposedDates;
+    if (req.body?.minHeadcount != null) transitionData.minHeadcount = req.body.minHeadcount;
+    if (req.body?.votingDeadline) transitionData.votingDeadline = req.body.votingDeadline;
+
+    const updated = await req.services.requests.transitionStatus(
+      req.params.id,
+      mappedStatus,
+      Object.keys(transitionData).length > 0 ? transitionData : undefined,
+    );
+    return res.json(updated);
   } catch (err: any) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
     return res.status(500).json({ error: 'Failed to update request status', detail: err.message });
   }
 });

@@ -1,11 +1,14 @@
 ---
-id: "002"
-title: "Request status transition state machine"
-status: todo
-use-cases: [SUC-001, SUC-002]
-depends-on: [001]
-github-issue: ""
-todo: ""
+id: '002'
+title: Request status transition state machine
+status: done
+use-cases:
+- SUC-001
+- SUC-002
+depends-on:
+- 1
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
@@ -33,17 +36,17 @@ Implement validated status transitions for `EventRequest` through the full lifec
 
 ## Acceptance Criteria
 
-- [ ] `RequestService.VALID_TRANSITIONS` static map covers all transitions above
-- [ ] `RequestService.transitionStatus(requestId, newStatus, data?)` validates transitions and applies side effects
-- [ ] Invalid transitions (e.g., `new → confirmed`) throw `ValidationError` returning 422
-- [ ] Transition to `dates_proposed` generates a unique `registrationToken` (64-char hex)
-- [ ] Transition to `dates_proposed` stores `proposedDates` on the EventRequest
-- [ ] Transition to `dates_proposed` sets default `minHeadcount` and `votingDeadline` when not provided
-- [ ] Idempotent: calling with current status returns 200 without error
-- [ ] `PUT /api/admin/requests/:id/status` delegates to `transitionStatus()` — no direct Prisma update
-- [ ] Cancellation from `new`, `discussing`, `dates_proposed`, `confirmed` all succeed
-- [ ] Cancellation from `completed` or `cancelled` returns 422
-- [ ] Existing admin request tests still pass
+- [x] `RequestService.VALID_TRANSITIONS` static map covers all transitions above
+- [x] `RequestService.transitionStatus(requestId, newStatus, data?)` validates transitions and applies side effects
+- [x] Invalid transitions (e.g., `new → confirmed`) throw `ValidationError` returning 422
+- [x] Transition to `dates_proposed` generates a unique `registrationToken` (64-char hex)
+- [x] Transition to `dates_proposed` stores `proposedDates` on the EventRequest
+- [x] Transition to `dates_proposed` sets default `minHeadcount` and `votingDeadline` when not provided
+- [x] Idempotent: calling with current status returns 200 without error
+- [x] `PUT /api/admin/requests/:id/status` delegates to `transitionStatus()` — no direct Prisma update
+- [x] Cancellation from `new`, `discussing`, `dates_proposed`, `confirmed` all succeed
+- [x] Cancellation from `completed` or `cancelled` returns 422
+- [x] Existing admin request tests still pass
 
 ## Testing
 
