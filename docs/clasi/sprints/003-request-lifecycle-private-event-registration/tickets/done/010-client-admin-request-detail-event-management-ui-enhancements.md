@@ -1,7 +1,7 @@
 ---
 id: "010"
 title: "Client — admin request detail & event management UI enhancements"
-status: todo
+status: done
 use-cases: [SUC-001, SUC-005]
 depends-on: [006]
 github-issue: ""
@@ -35,15 +35,15 @@ Extend the existing admin UI components to support the full request lifecycle, e
 
 ## Acceptance Criteria
 
-- [ ] Status transition buttons show only valid transitions from current status
-- [ ] "Propose Dates" transition includes date picker for proposed dates and optional minHeadcount/votingDeadline
-- [ ] Event configuration panel allows editing minHeadcount, votingDeadline, eventType
-- [ ] Registration summary table displays all registrations with per-date vote tallies
-- [ ] Shareable registration link shown and copyable when registrationToken exists
-- [ ] "Finalize Date" button triggers manual finalization
-- [ ] Status filter on requests list includes all lifecycle statuses
-- [ ] Existing admin request list and detail functionality preserved
-- [ ] All new controls properly handle loading/error states
+- [x] Status transition buttons show only valid transitions from current status
+- [x] "Propose Dates" transition includes date picker for proposed dates and optional minHeadcount/votingDeadline
+- [x] Event configuration panel allows editing minHeadcount, votingDeadline, eventType
+- [x] Registration summary table displays all registrations with per-date vote tallies
+- [x] Shareable registration link shown and copyable when registrationToken exists
+- [x] "Finalize Date" button triggers manual finalization
+- [x] Status filter on requests list includes all lifecycle statuses
+- [x] Existing admin request list and detail functionality preserved
+- [x] All new controls properly handle loading/error states
 
 ## Testing
 
