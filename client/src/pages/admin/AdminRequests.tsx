@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-type StatusTab = 'all' | 'new' | 'discussing' | 'scheduled' | 'cancelled';
+type StatusTab = 'all' | 'new' | 'discussing' | 'dates_proposed' | 'confirmed' | 'completed' | 'cancelled';
 
 interface RequestRow {
   id: string;
@@ -62,7 +62,7 @@ export default function AdminRequests() {
       <h1 style={{ margin: 0 }}>Admin Requests</h1>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {(['all', 'new', 'discussing', 'scheduled', 'cancelled'] as StatusTab[]).map((tab) => (
+        {(['all', 'new', 'discussing', 'dates_proposed', 'confirmed', 'completed', 'cancelled'] as StatusTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => {
@@ -77,7 +77,7 @@ export default function AdminRequests() {
               color: status === tab ? '#fff' : '#111827',
             }}
           >
-            {tab === 'all' ? 'All' : tab[0].toUpperCase() + tab.slice(1)}
+            {tabLabel(tab)}
           </button>
         ))}
       </div>
@@ -141,3 +141,16 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = {
   padding: '0.5rem',
 };
+
+function tabLabel(tab: string): string {
+  const labels: Record<string, string> = {
+    all: 'All',
+    new: 'New',
+    discussing: 'Discussing',
+    dates_proposed: 'Dates Proposed',
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  };
+  return labels[tab] || tab;
+}
