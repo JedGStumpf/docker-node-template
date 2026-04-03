@@ -27,6 +27,10 @@ interface RequestDetail {
   registrationToken?: string | null;
   proposedDates?: string[];
   assignedInstructorId?: number | null;
+  meetupEventUrl?: string | null;
+  meetupRsvpCount?: number | null;
+  googleCalendarEventId?: string | null;
+  eventCapacity?: number | null;
 }
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -53,6 +57,7 @@ export default function AdminRequestDetail() {
   const [editMinHeadcount, setEditMinHeadcount] = useState('');
   const [editVotingDeadline, setEditVotingDeadline] = useState('');
   const [editEventType, setEditEventType] = useState('');
+  const [editEventCapacity, setEditEventCapacity] = useState('');
 
   // Registration data
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -70,6 +75,7 @@ export default function AdminRequestDetail() {
         setEditMinHeadcount(data.minHeadcount != null ? String(data.minHeadcount) : '');
         setEditVotingDeadline(data.votingDeadline ? data.votingDeadline.slice(0, 10) : '');
         setEditEventType(data.eventType || 'private');
+        setEditEventCapacity(data.eventCapacity != null ? String(data.eventCapacity) : '');
       })
       .catch(() => setRequestDetail(null));
   }, [id]);
@@ -135,6 +141,7 @@ export default function AdminRequestDetail() {
         minHeadcount: editMinHeadcount ? Number(editMinHeadcount) : null,
         votingDeadline: editVotingDeadline || null,
         eventType: editEventType,
+        eventCapacity: editEventCapacity ? Number(editEventCapacity) : null,
       }),
     });
     if (!res.ok) {
@@ -193,6 +200,27 @@ export default function AdminRequestDetail() {
       <p><strong>Site:</strong> {requestDetail.site?.name || 'Unassigned'}</p>
       <p><strong>Email Thread:</strong> {requestDetail.emailThreadAddress || 'Not available'}</p>
       <p><strong>Asana Task:</strong> {requestDetail.asanaTaskId || 'Not linked'}</p>
+
+      {/* Integration indicators */}
+      {requestDetail.meetupEventUrl && (
+        <p data-testid="meetup-link">
+          <strong>Meetup:</strong>{' '}
+          <a href={requestDetail.meetupEventUrl} target="_blank" rel="noopener noreferrer">
+            View on Meetup
+          </a>
+          {requestDetail.meetupRsvpCount != null && (
+            <span style={{ marginLeft: 8, background: '#dbeafe', padding: '2px 8px', borderRadius: 12, fontSize: '0.85rem' }}>
+              {requestDetail.meetupRsvpCount} RSVPs
+            </span>
+          )}
+        </p>
+      )}
+      {requestDetail.googleCalendarEventId && (
+        <p data-testid="calendar-indicator">
+          <strong>Calendar:</strong>{' '}
+          <span style={{ color: '#16a34a' }}>✓ Synced to Google Calendar</span>
+        </p>
+      )}
 
       {/* Status transition buttons */}
       {allowedTransitions.length > 0 && (
@@ -286,6 +314,18 @@ export default function AdminRequestDetail() {
               style={inputStyle}
             />
           </label>
+          <label>
+            Event Capacity (blank = unlimited)
+            <input
+              type="number"
+              value={editEventCapacity}
+              onChange={e => setEditEventCapacity(e.target.value)}
+              style={inputStyle}
+              data-testid="event-capacity-input"
+              min="1"
+              placeholder="No limit"
+            />
+          </label>
           <button onClick={saveEventConfig} style={btnStyle}>Save Configuration</button>
         </fieldset>
       )}
@@ -325,7 +365,21 @@ export default function AdminRequestDetail() {
                     <td style={td}>{reg.attendeeEmail}</td>
                     <td style={td}>{reg.numberOfKids}</td>
                     <td style={td}>{reg.availableDates.join(', ')}</td>
-                    <td style={td}>{reg.status}</td>
+                    <td style={td}>
+                      {reg.status === 'waitlisted' ? (
+                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 12, fontSize: '0.85rem' }}>
+                          Waitlisted
+                        </span>
+                      ) : reg.status === 'cancelled' ? (
+                        <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: 12, fontSize: '0.85rem' }}>
+                          Cancelled
+                        </span>
+                      ) : (
+                        <span style={{ background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 12, fontSize: '0.85rem' }}>
+                          Registered
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

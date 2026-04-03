@@ -24,6 +24,7 @@ import ScheduledJobsPanel from './pages/admin/ScheduledJobsPanel';
 import ImportExport from './pages/admin/ImportExport';
 import UsersPanel from './pages/admin/UsersPanel';
 import EventPage from './pages/EventPage';
+import EmailQueueAdmin from './pages/admin/EmailQueueAdmin';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
               <Route path="/admin/channels" element={<Channels />} />
               <Route path="/admin/requests" element={<AdminRequests />} />
               <Route path="/admin/requests/:id" element={<AdminRequestDetail />} />
+              <Route path="/admin/email-queue" element={<EmailQueueAdmin />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

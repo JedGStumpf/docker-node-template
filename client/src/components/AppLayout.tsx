@@ -31,6 +31,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/scheduler', label: 'Scheduled Jobs' },
   { to: '/admin/import-export', label: 'Import/Export' },
   { to: '/admin/requests', label: 'Requests' },
+  { to: '/admin/email-queue', label: 'Email Queue' },
 ];
 
 const BOTTOM_NAV: NavItem[] = [
