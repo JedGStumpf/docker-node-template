@@ -1,7 +1,7 @@
 ---
 id: "007"
 title: "Asana bidirectional sync: webhook endpoint and outbound automation"
-status: todo
+status: done
 use-cases:
   - SUC-003
   - SUC-004
@@ -58,13 +58,13 @@ Called from `EmailExtractionService` after storing the extraction (fire-and-forg
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/webhooks/asana` echoes `X-Hook-Secret` on handshake and returns 200.
-- [ ] A task-completed webhook event transitions the corresponding `EventRequest`.
-- [ ] Unknown event types return 200 without erroring.
-- [ ] `AsanaService.pushExtractionUpdate()` posts a comment with extraction summary to the Asana task.
-- [ ] Extraction update is skipped gracefully when `ASANA_ACCESS_TOKEN` is not set.
-- [ ] `POST /api/webhooks/asana` returns 200 for all valid payloads (no 500s on unexpected input).
-- [ ] `npm run test:server` passes green.
+- [x] `POST /api/webhooks/asana` echoes `X-Hook-Secret` on handshake and returns 200.
+- [x] A task-completed webhook event transitions the corresponding `EventRequest`.
+- [x] Unknown event types return 200 without erroring.
+- [x] `AsanaService.pushExtractionUpdate()` posts a comment with extraction summary to the Asana task.
+- [x] Extraction update is skipped gracefully when `ASANA_ACCESS_TOKEN` is not set.
+- [x] `POST /api/webhooks/asana` returns 200 for all valid payloads (no 500s on unexpected input).
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
