@@ -118,6 +118,8 @@ export class SchedulerService {
       { name: 'assignment-reminders', frequency: 'hourly' },
       { name: 'registration-digest', frequency: 'daily' },
       { name: 'deadline-check', frequency: 'hourly' },
+      { name: 'email-sender', frequency: 'hourly' },
+      { name: 'meetup-rsvp-sync', frequency: 'daily' },
     ];
     for (const def of defaults) {
       await this.prisma.scheduledJob.upsert({

@@ -66,6 +66,30 @@ initPrisma().then(() => initConfigCache()).then(async () => {
       }
     }
   });
+  // Sprint 4: Email queue sender — runs hourly
+  registry.scheduler.registerHandler('email-sender', async () => {
+    const transport = registry.email.getTransport();
+    await registry.emailQueue.processPending(transport, 20);
+  });
+  // Sprint 4: Meetup RSVP sync — daily
+  registry.scheduler.registerHandler('meetup-rsvp-sync', async () => {
+    const now = new Date();
+    const requests = await prisma.eventRequest.findMany({
+      where: {
+        status: 'confirmed',
+        groupType: 'public',
+        meetupEventId: { not: null },
+        confirmedDate: { gt: now },
+      },
+    });
+    for (const req of requests) {
+      try {
+        await registry.meetup.syncRsvps(req.id);
+      } catch (err) {
+        console.error(`meetup-rsvp-sync: failed for request ${req.id}`, err);
+      }
+    }
+  });
   registry.scheduler.startTicking();
 
   // Sprint 1: Background jobs — not registered in test env
