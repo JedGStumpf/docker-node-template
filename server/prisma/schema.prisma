@@ -175,6 +175,14 @@ model EventRequest {
   assignedInstructorId    Int?
 
   assignedInstructor      InstructorProfile? @relation("AssignedInstructor", fields: [assignedInstructorId], references: [id])
+
+  // Sprint 4 fields — Public Events, Calendar Integration & Email Queue
+  meetupEventId           String?
+  meetupEventUrl          String?
+  meetupRsvpCount         Int            @default(0)
+  googleCalendarEventId   String?
+  eventCapacity           Int?
+
   registrations           Registration[]
 }
 
@@ -269,4 +277,23 @@ model Registration {
   request         EventRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@unique([requestId, attendeeEmail])
+}
+
+// ── Sprint 4: Public Events, Calendar Integration & Email Queue ─────────────
+
+model EmailQueue {
+  id          String    @id @default(uuid())
+  recipient   String
+  subject     String
+  textBody    String
+  htmlBody    String?
+  replyTo     String?
+  attachments String?
+  status      String    @default("pending")
+  attempts    Int       @default(0)
+  nextRetryAt DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, nextRetryAt])
 }

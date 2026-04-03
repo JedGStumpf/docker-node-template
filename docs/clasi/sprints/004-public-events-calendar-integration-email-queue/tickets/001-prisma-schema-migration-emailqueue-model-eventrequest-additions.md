@@ -1,11 +1,18 @@
 ---
-id: "001"
-title: "Prisma schema migration — EmailQueue model, EventRequest additions"
-status: todo
-use-cases: [SUC-001, SUC-002, SUC-003, SUC-004, SUC-005, SUC-007, SUC-009]
+id: '001'
+title: "Prisma schema migration \u2014 EmailQueue model, EventRequest additions"
+status: in-progress
+use-cases:
+- SUC-001
+- SUC-002
+- SUC-003
+- SUC-004
+- SUC-005
+- SUC-007
+- SUC-009
 depends-on: []
-github-issue: ""
-todo: "outbound-email-queue-retry.md"
+github-issue: ''
+todo: outbound-email-queue-retry.md
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
