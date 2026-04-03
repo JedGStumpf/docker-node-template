@@ -130,6 +130,7 @@ model InstructorProfile {
   maxTravelMinutes Int       @default(60)
   serviceZips      String[]  @default([])
   active           Boolean   @default(true)
+  inventoryUserId  String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -184,21 +185,25 @@ model EventRequest {
   eventCapacity           Int?
 
   registrations           Registration[]
+  emailExtractions        EmailExtraction[]
 }
 
 model InstructorAssignment {
-  id                String           @id @default(uuid())
-  requestId         String
-  instructorId      Int
-  status            AssignmentStatus @default(pending)
-  notificationToken String           @unique
-  notifiedAt        DateTime?
-  respondedAt       DateTime?
-  reminderCount     Int              @default(0)
-  lastReminderAt    DateTime?
-  timeoutAt         DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id                      String           @id @default(uuid())
+  requestId               String
+  instructorId            Int
+  status                  AssignmentStatus @default(pending)
+  notificationToken       String           @unique
+  notifiedAt              DateTime?
+  respondedAt             DateTime?
+  reminderCount           Int              @default(0)
+  lastReminderAt          DateTime?
+  timeoutAt               DateTime?
+  equipmentStatus         String           @default("unknown")
+  equipmentCheckedAt      DateTime?
+  equipmentReminderCount  Int              @default(0)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
 
   request           EventRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
   instructor        InstructorProfile @relation(fields: [instructorId], references: [id])
@@ -277,6 +282,23 @@ model Registration {
   request         EventRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@unique([requestId, attendeeEmail])
+}
+
+// ── Sprint 5: AI Extraction, Asana Sync, Equipment Readiness ────────────────
+
+model EmailExtraction {
+  id                    String    @id @default(cuid())
+  emailId               String
+  requestId             String
+  statusSignal          String?
+  actionItems           String[]
+  hostRegistrationCount Int?
+  appliedAt             DateTime?
+  createdAt             DateTime  @default(now())
+
+  request               EventRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
 }
 
 // ── Sprint 4: Public Events, Calendar Integration & Email Queue ─────────────

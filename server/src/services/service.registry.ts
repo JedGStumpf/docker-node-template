@@ -151,6 +151,7 @@ export class ServiceRegistry {
     await p.roleAssignmentPattern.deleteMany();
     // Sprint 1 models (FK-safe order)
     try {
+      await p.emailExtraction.deleteMany();
       await p.emailQueue.deleteMany();
       await p.registration.deleteMany();
       await p.siteRepSession.deleteMany();
