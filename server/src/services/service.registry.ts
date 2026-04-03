@@ -30,6 +30,7 @@ import { MeetupService } from './meetup.service';
 import { MockMeetupClient, RealMeetupClient, type IMeetupClient } from './meetup.client';
 import { GoogleCalendarService } from './google-calendar.service';
 import { MockGoogleCalendarClient, RealGoogleCalendarClient, type IGoogleCalendarClient } from './google-calendar.client';
+import { StubInventoryClient, type IInventoryClient } from './inventory';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -58,6 +59,9 @@ export class ServiceRegistry {
   readonly meetup: MeetupService;
   readonly googleCalendarClient: IGoogleCalendarClient;
   readonly googleCalendar: GoogleCalendarService;
+
+  // Sprint 5 services
+  readonly inventoryClient: IInventoryClient;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -112,6 +116,9 @@ export class ServiceRegistry {
 
     this.meetup = new MeetupService(defaultPrisma, this.meetupClient, this.content);
     this.googleCalendar = new GoogleCalendarService(defaultPrisma, this.googleCalendarClient);
+
+    // Sprint 5: Inventory client — always stub in Sprint 5 (real HTTP client is a follow-on task)
+    this.inventoryClient = new StubInventoryClient();
 
     this.requests = new RequestService(defaultPrisma, {
       meetupService: this.meetup,
