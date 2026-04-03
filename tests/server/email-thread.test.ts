@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { prisma } from '../../server/src/services/prisma';
 import { SiteService } from '../../server/src/services/site.service';
+import { flushQueue } from './helpers/flush-queue';
 
 process.env.NODE_ENV = 'test';
 import app, { registry } from '../../server/src/app';
@@ -85,6 +86,7 @@ describe('Request verification thread + Asana + site rep notification', () => {
     expect(updated?.emailThreadAddress).toMatch(/^req-[0-9A-HJKMNP-TV-Z]+@threads\.example\.org$/i);
     expect(updated?.asanaTaskId).toBeTruthy();
 
+    await flushQueue(registry);
     const sent = getSentEmails();
     const repEmail = sent.find((m) => m.to === contactEmail || m.to?.includes('email-thread-contact'));
     expect(repEmail).toBeTruthy();

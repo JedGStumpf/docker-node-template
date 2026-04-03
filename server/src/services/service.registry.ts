@@ -25,6 +25,7 @@ import { SiteService } from './site.service';
 import { AsanaService } from './asana.service';
 import { MockAsanaClient, RealAsanaClient } from './asana.client';
 import { RegistrationService } from './registration.service';
+import { EmailQueueService } from './email-queue.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -46,6 +47,7 @@ export class ServiceRegistry {
   readonly sites: SiteService;
   readonly asana: AsanaService;
   readonly registration: RegistrationService;
+  readonly emailQueue: EmailQueueService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -71,11 +73,13 @@ export class ServiceRegistry {
     this.requests = new RequestService(defaultPrisma);
     this.instructors = new InstructorService(defaultPrisma);
 
+    this.emailQueue = new EmailQueueService(defaultPrisma);
+
     // Email transport: use in-memory mock in test environment
     if (process.env.NODE_ENV === 'test') {
-      this.email = new EmailService(new InMemoryEmailTransport());
+      this.email = new EmailService(new InMemoryEmailTransport(), this.emailQueue);
     } else {
-      this.email = new EmailService(new SesEmailTransport());
+      this.email = new EmailService(new SesEmailTransport(), this.emailQueue);
     }
 
     this.sites = new SiteService(defaultPrisma);

@@ -5,6 +5,8 @@
  * without making real SES calls.
  */
 
+import type { EmailQueueService } from './email-queue.service';
+
 export interface EmailAttachment {
   filename: string;
   content: Buffer;
@@ -76,7 +78,25 @@ export class SesEmailTransport implements IEmailTransport {
 }
 
 export class EmailService {
-  constructor(private transport: IEmailTransport) {}
+  private emailQueue?: EmailQueueService;
+  
+  constructor(private transport: IEmailTransport, emailQueue?: EmailQueueService) {
+    this.emailQueue = emailQueue;
+  }
+
+  /** Internal: send via queue if available, otherwise direct transport */
+  private async dispatch(message: EmailMessage): Promise<void> {
+    if (this.emailQueue) {
+      await this.emailQueue.enqueue(message);
+    } else {
+      await this.transport.send(message);
+    }
+  }
+
+  /** Expose the transport for the queue worker */
+  getTransport(): IEmailTransport {
+    return this.transport;
+  }
 
   async sendVerificationEmail(opts: {
     to: string;
@@ -86,7 +106,7 @@ export class EmailService {
   }): Promise<void> {
     const base = opts.baseUrl || process.env.APP_BASE_URL || 'http://localhost:3000';
     const link = `${base}/api/requests/${opts.requestId}/verify?token=${opts.token}`;
-    await this.transport.send({
+    await this.dispatch({
       to: opts.to,
       subject: 'Verify your Tech Club event request',
       text: `Please verify your event request by clicking the link below. This link expires in 1 hour.\n\n${link}`,
@@ -110,7 +130,7 @@ export class EmailService {
     const acceptUrl = `${base}/api/instructor/assignments/${opts.assignmentId}/accept?token=${opts.notificationToken}`;
     const declineUrl = `${base}/api/instructor/assignments/${opts.assignmentId}/decline?token=${opts.notificationToken}`;
     const datesStr = opts.preferredDates.join(', ');
-    await this.transport.send({
+    await this.dispatch({
       to: opts.to,
       subject: `New Tech Club event request — ${opts.classTitle}`,
       text: `A new event request has been matched to you.\n\nClass: ${opts.classTitle}\nRequester: ${opts.requesterName}\nZip: ${opts.zipCode}\nPreferred dates: ${datesStr}\n\nAccept: ${acceptUrl}\nDecline: ${declineUrl}`,
@@ -131,7 +151,7 @@ export class EmailService {
     const base = opts.baseUrl || process.env.APP_BASE_URL || 'http://localhost:3000';
     const acceptUrl = `${base}/api/instructor/assignments/${opts.assignmentId}/accept?token=${opts.notificationToken}`;
     const declineUrl = `${base}/api/instructor/assignments/${opts.assignmentId}/decline?token=${opts.notificationToken}`;
-    await this.transport.send({
+    await this.dispatch({
       to: opts.to,
       subject: `Reminder: Tech Club event request — ${opts.classTitle}`,
       text: `This is a reminder that you have a pending event request.\n\nClass: ${opts.classTitle}\n\nAccept: ${acceptUrl}\nDecline: ${declineUrl}`,
@@ -154,7 +174,7 @@ export class EmailService {
     const body = opts.noMatchAvailable
       ? `No available instructors were found for request ${opts.requestId} (${opts.classTitle} from ${opts.requesterName}). Manual assignment needed.`
       : `A new event request has been submitted. Request ID: ${opts.requestId}. Class: ${opts.classTitle}. Requester: ${opts.requesterName}.`;
-    await this.transport.send({
+    await this.dispatch({
       to: adminEmail,
       subject,
       text: body,
@@ -163,7 +183,7 @@ export class EmailService {
   }
 
   async sendSiteInvitation(email: string, name: string, inviteUrl: string): Promise<void> {
-    await this.transport.send({
+    await this.dispatch({
       to: email,
       subject: 'You are invited to register your site',
       text: `Hi ${name},\n\nYou have been invited to register your site for League events.\n\nUse this link to complete registration:\n${inviteUrl}\n\nThis invitation expires in 7 days.`,
@@ -172,7 +192,7 @@ export class EmailService {
   }
 
   async sendMagicLink(email: string, magicUrl: string): Promise<void> {
-    await this.transport.send({
+    await this.dispatch({
       to: email,
       subject: 'Your magic sign-in link',
       text: `Use this link to sign in:\n${magicUrl}\n\nThis link expires in 24 hours.`,
@@ -196,7 +216,7 @@ export class EmailService {
     const dates = Array.isArray(request.preferredDates) && request.preferredDates.length > 0
       ? request.preferredDates.join(', ')
       : 'TBD';
-    await this.transport.send({
+    await this.dispatch({
       to: siteRep.email,
       subject: `New request matched for ${siteName}`,
       text: `Hi ${repName},\n\nA new request has been matched to your site.\n\nRequest ID: ${request.id}\nClass: ${request.classSlug}\nRequester: ${request.requesterName}\nZip: ${request.zipCode || 'N/A'}\nPreferred dates: ${dates}`,
@@ -247,7 +267,7 @@ export class EmailService {
     const dateStr = new Date(eventDetails.date).toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
-    await this.transport.send({
+    await this.dispatch({
       to,
       subject: `Event Confirmed: ${eventDetails.title}`,
       text: `Your event "${eventDetails.title}" is confirmed for ${dateStr}${eventDetails.location ? ` at ${eventDetails.location}` : ''}. A calendar invite is attached.`,
@@ -273,7 +293,7 @@ export class EmailService {
     const dateStr = new Date(confirmedDate).toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
-    await this.transport.send({
+    await this.dispatch({
       to,
       subject: `Date Update: ${eventDetails.title}`,
       text: `The event "${eventDetails.title}" has been scheduled for ${dateStr}${eventDetails.location ? ` at ${eventDetails.location}` : ''}. This date differs from the one you selected. We hope you can still attend!`,
@@ -290,7 +310,7 @@ export class EmailService {
       replyTo?: string;
     },
   ): Promise<void> {
-    await this.transport.send({
+    await this.dispatch({
       to,
       subject: `Event Cancelled: ${eventDetails.title}`,
       text: `The event "${eventDetails.title}" (Request ${eventDetails.requestId}) has been cancelled. If you have questions, please reply to this email.`,
@@ -307,7 +327,7 @@ export class EmailService {
       replyTo?: string;
     },
   ): Promise<void> {
-    await this.transport.send({
+    await this.dispatch({
       to,
       subject: `Voting Deadline Expired: ${eventDetails.title}`,
       text: `The voting deadline for "${eventDetails.title}" (Request ${eventDetails.requestId}) has passed without any date reaching the minimum headcount. Admin action is required — please cancel or reschedule this event.`,
@@ -321,7 +341,7 @@ export class EmailService {
     threadAddress: string,
     digestHtml: string,
   ): Promise<void> {
-    await this.transport.send({
+    await this.dispatch({
       to: threadAddress,
       subject: 'Registration Summary Update',
       text: 'See attached HTML summary for current registration status.',

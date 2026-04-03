@@ -6,6 +6,7 @@ import request from 'supertest';
 import { prisma } from '../../server/src/services/prisma';
 import { InMemoryEmailTransport } from '../../server/src/services/email.service';
 import type { InstructorProfile } from '../../server/src/generated/prisma/client';
+import { flushQueue } from './helpers/flush-queue';
 
 process.env.NODE_ENV = 'test';
 import app, { registry } from '../../server/src/app';
@@ -50,9 +51,11 @@ afterAll(async () => {
   }).catch(() => {});
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   // Reset captured emails between tests
   getEmailTransport().reset();
+  // Clear queued emails from previous tests
+  await prisma.emailQueue.deleteMany();
   // Invalidate content cache so CONTENT_JSON_URL is picked up fresh
   registry.content.invalidateCache();
 });
@@ -91,6 +94,7 @@ describe('POST /api/requests', () => {
     const res = await request(app).post('/api/requests').send(VALID_BODY);
     expect(res.status).toBe(201);
 
+    await flushQueue(registry);
     const transport = getEmailTransport();
     const emails = transport.sent;
     expect(emails.length).toBeGreaterThan(0);
@@ -107,6 +111,7 @@ describe('POST /api/requests', () => {
     expect(res.status).toBe(201);
 
     const saved = await prisma.eventRequest.findUnique({ where: { id: res.body.id } });
+    await flushQueue(registry);
     const transport = getEmailTransport();
     const verifyEmail = transport.sent.find((e) => e.to === VALID_BODY.requesterEmail);
 
