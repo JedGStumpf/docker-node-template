@@ -1,7 +1,7 @@
 ---
 id: "002"
 title: "IInventoryClient interface and StubInventoryClient implementation"
-status: todo
+status: done
 use-cases:
   - SUC-005
   - SUC-006
@@ -47,11 +47,11 @@ export interface IInventoryClient {
 
 ## Acceptance Criteria
 
-- [ ] `IInventoryClient` interface is exported from `server/src/services/inventory/index.ts`.
-- [ ] `StubInventoryClient` returns correct fixture data for all three modes (`ready`, `pending`, error).
-- [ ] `ServiceRegistry` exposes `inventoryClient` property.
-- [ ] Unit tests for `StubInventoryClient` cover all three modes.
-- [ ] `npm run test:server` passes green.
+- [x] `IInventoryClient` interface is exported from `server/src/services/inventory/index.ts`.
+- [x] `StubInventoryClient` returns correct fixture data for all three modes (`ready`, `pending`, error).
+- [x] `ServiceRegistry` exposes `inventoryClient` property.
+- [x] Unit tests for `StubInventoryClient` cover all three modes.
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
