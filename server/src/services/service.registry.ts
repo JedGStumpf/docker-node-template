@@ -121,7 +121,7 @@ export class ServiceRegistry {
 
     // Sprint 5: Inventory client — always stub in Sprint 5 (real HTTP client is a follow-on task)
     this.inventoryClient = new StubInventoryClient();
-    this.equipment = new EquipmentService(defaultPrisma, this.inventoryClient, this.content, this.emailQueue);
+    this.equipment = new EquipmentService(defaultPrisma, this.inventoryClient, this.content, this.email);
 
     // Wire equipment service into instructor service (avoiding circular constructor dependency)
     this.instructors.setEquipmentService(this.equipment);

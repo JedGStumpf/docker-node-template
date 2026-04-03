@@ -13,7 +13,7 @@
 
 import type { IInventoryClient, CheckoutItem } from './inventory';
 import type { ContentService } from './content.service';
-import type { EmailQueueService } from './email-queue.service';
+import type { EmailService } from './email.service';
 
 export interface EquipmentItem {
   item_type: string;
@@ -25,7 +25,7 @@ export class EquipmentService {
     private prisma: any,
     private inventoryClient: IInventoryClient,
     private content: ContentService,
-    private emailQueue: EmailQueueService,
+    private email: EmailService,
   ) {}
 
   /**
@@ -146,23 +146,11 @@ export class EquipmentService {
         data: { equipmentStatus: 'ready', equipmentCheckedAt: now },
       });
 
-      const itemList = required.map((i) => `${i.quantity}× ${i.item_type}`).join(', ');
-      const subject = `You're all set for ${request.classSlug}`;
-      const text = [
-        `Hi ${instructor.displayName},`,
-        '',
-        `Great news — you already have all the equipment for ${request.classSlug}.`,
-        '',
-        `Equipment confirmed: ${itemList}`,
-        '',
-        'No further action is needed on your part.',
-      ].join('\n');
-
-      await this.emailQueue.enqueue({
+      await this.email.sendEquipmentReadyEmail({
         to: instructor.email,
-        subject,
-        text,
-        html: `<p>${text.replace(/\n/g, '<br>')}</p>`,
+        instructorName: instructor.displayName,
+        classSlug: request.classSlug,
+        items: required,
       });
     } else {
       // Gear still needed
@@ -171,26 +159,11 @@ export class EquipmentService {
         data: { equipmentStatus: 'pending_checkout', equipmentCheckedAt: now },
       });
 
-      const itemList = stillNeeded.map((i) => `${i.quantity}× ${i.item_type}`).join(', ');
-      const checkoutUrl = process.env.INVENTORY_CHECKOUT_URL || 'https://inventory.example.com/checkout';
-      const subject = `Action needed: check out equipment for ${request.classSlug}`;
-      const text = [
-        `Hi ${instructor.displayName},`,
-        '',
-        `To teach ${request.classSlug}, you still need to check out the following equipment:`,
-        '',
-        itemList,
-        '',
-        `Please check out the items at: ${checkoutUrl}`,
-        '',
-        "You'll receive daily reminders until your checkout is confirmed.",
-      ].join('\n');
-
-      await this.emailQueue.enqueue({
+      await this.email.sendEquipmentCheckoutPromptEmail({
         to: instructor.email,
-        subject,
-        text,
-        html: `<p>${text.replace(/\n/g, '<br>')}</p>`,
+        instructorName: instructor.displayName,
+        classSlug: request.classSlug,
+        itemsNeeded: stillNeeded,
       });
     }
   }

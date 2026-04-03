@@ -91,7 +91,7 @@ describe('GET /api/assignments/:id/equipment-status', () => {
 
     // Log in as admin for simpler auth
     await agent
-      .post('/api/auth/admin')
+      .post('/api/admin/login')
       .send({ password: process.env.ADMIN_PASSWORD || 'admin' });
 
     const res = await agent.get(`/api/assignments/${assignment.id}/equipment-status`);

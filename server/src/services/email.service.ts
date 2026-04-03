@@ -336,6 +336,92 @@ export class EmailService {
     });
   }
 
+  // ── Sprint 5: Equipment Readiness Emails ─────────────────────────────────
+
+  async sendEquipmentReadyEmail(opts: {
+    to: string;
+    instructorName: string;
+    classSlug: string;
+    items: Array<{ item_type: string; quantity: number }>;
+  }): Promise<void> {
+    const itemList = opts.items.map((i) => `${i.quantity}× ${i.item_type}`).join(', ');
+    await this.dispatch({
+      to: opts.to,
+      subject: `You're all set for ${opts.classSlug}`,
+      text: [
+        `Hi ${opts.instructorName},`,
+        '',
+        `Great news — you already have all the equipment you need to teach ${opts.classSlug}.`,
+        '',
+        `Equipment confirmed: ${itemList}`,
+        '',
+        'No further action is needed on your part.',
+      ].join('\n'),
+      html: `<p>Hi ${opts.instructorName},</p><p>Great news — you already have all the equipment you need to teach <strong>${opts.classSlug}</strong>.</p><p>Equipment confirmed: ${itemList}</p><p>No further action is needed on your part.</p>`,
+    });
+  }
+
+  async sendEquipmentCheckoutPromptEmail(opts: {
+    to: string;
+    instructorName: string;
+    classSlug: string;
+    itemsNeeded: Array<{ item_type: string; quantity: number }>;
+  }): Promise<void> {
+    const itemList = opts.itemsNeeded.map((i) => `${i.quantity}× ${i.item_type}`).join('\n  ');
+    const checkoutUrl = process.env.INVENTORY_CHECKOUT_URL;
+    const checkoutLine = checkoutUrl
+      ? `Please check out the items at: ${checkoutUrl}`
+      : 'Please check out the required items from the inventory system.';
+    await this.dispatch({
+      to: opts.to,
+      subject: `Action needed: check out equipment for ${opts.classSlug}`,
+      text: [
+        `Hi ${opts.instructorName},`,
+        '',
+        `To teach ${opts.classSlug}, you still need to check out the following equipment:`,
+        '',
+        `  ${itemList}`,
+        '',
+        checkoutLine,
+        '',
+        "You'll receive daily reminders until your checkout is confirmed.",
+      ].join('\n'),
+      html: `<p>Hi ${opts.instructorName},</p><p>To teach <strong>${opts.classSlug}</strong>, you still need to check out the following equipment:</p><ul>${opts.itemsNeeded.map((i) => `<li>${i.quantity}× ${i.item_type}</li>`).join('')}</ul><p>${checkoutLine}</p><p>You'll receive daily reminders until your checkout is confirmed.</p>`,
+    });
+  }
+
+  async sendEquipmentCheckoutReminderEmail(opts: {
+    to: string;
+    instructorName: string;
+    classSlug: string;
+    itemsNeeded: Array<{ item_type: string; quantity: number }>;
+    daysUntilEvent: number;
+    reminderCount: number;
+  }): Promise<void> {
+    const itemList = opts.itemsNeeded.map((i) => `${i.quantity}× ${i.item_type}`).join('\n  ');
+    const checkoutUrl = process.env.INVENTORY_CHECKOUT_URL;
+    const checkoutLine = checkoutUrl
+      ? `Please check out the items at: ${checkoutUrl}`
+      : 'Please check out the required items from the inventory system.';
+    const urgency = opts.daysUntilEvent <= 3 ? ' — event is soon!' : '';
+    await this.dispatch({
+      to: opts.to,
+      subject: `Reminder (${opts.daysUntilEvent} days until event${urgency}): check out equipment for ${opts.classSlug}`,
+      text: [
+        `Hi ${opts.instructorName},`,
+        '',
+        `This is reminder #${opts.reminderCount + 1}. Your class ${opts.classSlug} is in ${opts.daysUntilEvent} day(s).`,
+        '',
+        'You still need to check out:',
+        '',
+        `  ${itemList}`,
+        '',
+        checkoutLine,
+      ].join('\n'),
+      html: `<p>Hi ${opts.instructorName},</p><p>This is reminder #${opts.reminderCount + 1}. Your class <strong>${opts.classSlug}</strong> is in <strong>${opts.daysUntilEvent} day(s)</strong>.</p><p>You still need to check out:</p><ul>${opts.itemsNeeded.map((i) => `<li>${i.quantity}× ${i.item_type}</li>`).join('')}</ul><p>${checkoutLine}</p>`,
+    });
+  }
+
   async sendRegistrationDigest(
     replyTo: string,
     threadAddress: string,

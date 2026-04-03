@@ -8,6 +8,7 @@
  */
 import { Router, Request, Response } from 'express';
 import { requireInstructor } from '../middleware/requirePike13';
+import { requireAdmin } from '../middleware/requireAdmin';
 import { ServiceError } from '../errors';
 
 export const instructorRouter = Router();
@@ -110,6 +111,51 @@ instructorRouter.get('/assignments/:id/equipment-status', requireInstructor, asy
     if (!status) return res.status(404).json({ error: 'Assignment not found' });
 
     res.json(status);
+  } catch (err: any) {
+    if (err instanceof ServiceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** POST /api/assignments/:id/equipment-status/override (admin only) */
+instructorRouter.post('/assignments/:id/equipment-status/override', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const assignmentId = firstString(req.params.id);
+    if (!assignmentId) return res.status(400).json({ error: 'Missing assignment id' });
+
+    const { status, note } = req.body;
+    if (!status || !['ready', 'unknown'].includes(status)) {
+      return res.status(400).json({ error: 'status must be "ready" or "unknown"' });
+    }
+
+    const assignment = await req.services.prisma.instructorAssignment.findUnique({
+      where: { id: assignmentId },
+    });
+    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
+
+    const overriddenAt = new Date();
+    const adminIdentity = (req.user as any)?.email || (req.session as any)?.pike13Email || 'admin';
+
+    const updated = await req.services.prisma.instructorAssignment.update({
+      where: { id: assignmentId },
+      data: {
+        equipmentStatus: status,
+        equipmentCheckedAt: overriddenAt,
+      },
+    });
+
+    console.log(
+      `EquipmentStatus override: assignment ${assignmentId} → ${status} by ${adminIdentity}${note ? ` (note: ${note})` : ''}`,
+    );
+
+    res.json({
+      id: updated.id,
+      equipmentStatus: updated.equipmentStatus,
+      overriddenAt,
+      overriddenBy: adminIdentity,
+    });
   } catch (err: any) {
     if (err instanceof ServiceError) {
       return res.status(err.statusCode).json({ error: err.message });

@@ -6,12 +6,15 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { prisma } from '../../server/src/services/prisma';
 import { EquipmentService } from '../../server/src/services/equipment.service';
 import { StubInventoryClient } from '../../server/src/services/inventory';
+import { EmailService, InMemoryEmailTransport } from '../../server/src/services/email.service';
 import { EmailQueueService } from '../../server/src/services/email-queue.service';
 import { ContentService } from '../../server/src/services/content.service';
 
 process.env.NODE_ENV = 'test';
 
 const emailQueue = new EmailQueueService(prisma);
+const emailTransport = new InMemoryEmailTransport();
+const emailSvc = new EmailService(emailTransport, emailQueue);
 const content = new ContentService(); // Uses CONTENT_JSON_URL from setup.ts
 
 let instructorWithInventory: any;
@@ -81,7 +84,7 @@ async function createAssignment(instructorId: number, token: string): Promise<an
 }
 
 describe('EquipmentService.parseEquipmentNeeded', () => {
-  const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailQueue);
+  const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailSvc);
 
   it('parses "2 EV3 Robot Kit" into quantity 2', () => {
     const result = service.parseEquipmentNeeded(['2 EV3 Robot Kit']);
@@ -105,7 +108,7 @@ describe('EquipmentService.parseEquipmentNeeded', () => {
 });
 
 describe('EquipmentService.computeStillNeeded', () => {
-  const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailQueue);
+  const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailSvc);
 
   it('returns empty array when fully equipped', () => {
     const required = [{ item_type: 'laptop', quantity: 1 }];
@@ -127,7 +130,7 @@ describe('EquipmentService.checkReadiness', () => {
       instructorWithoutInventory.id,
       `equip-token-no-inv-${Date.now()}`,
     );
-    const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailQueue);
+    const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailSvc);
     await service.checkReadiness(assignment.id);
     const updated = await prisma.instructorAssignment.findUnique({ where: { id: assignment.id } });
     expect(updated?.equipmentStatus).toBe('unknown');
@@ -139,7 +142,7 @@ describe('EquipmentService.checkReadiness', () => {
       instructorWithInventory.id,
       `equip-token-pending-${Date.now()}`,
     );
-    const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailQueue);
+    const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailSvc);
     await service.checkReadiness(assignment.id);
     const updated = await prisma.instructorAssignment.findUnique({ where: { id: assignment.id } });
     // python-intro requires "laptop" (qty 1); stub returns EV3 kits/microbits, so laptop is still needed
@@ -153,7 +156,7 @@ describe('EquipmentService.checkReadiness', () => {
       instructorWithInventory.id,
       `equip-token-error-${Date.now()}`,
     );
-    const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailQueue);
+    const service = new EquipmentService(prisma, new StubInventoryClient(), content, emailSvc);
     await service.checkReadiness(assignment.id);
     const updated = await prisma.instructorAssignment.findUnique({ where: { id: assignment.id } });
     expect(updated?.equipmentStatus).toBe('unknown');
