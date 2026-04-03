@@ -26,6 +26,10 @@ import { AsanaService } from './asana.service';
 import { MockAsanaClient, RealAsanaClient } from './asana.client';
 import { RegistrationService } from './registration.service';
 import { EmailQueueService } from './email-queue.service';
+import { MeetupService } from './meetup.service';
+import { MockMeetupClient, RealMeetupClient, type IMeetupClient } from './meetup.client';
+import { GoogleCalendarService } from './google-calendar.service';
+import { MockGoogleCalendarClient, RealGoogleCalendarClient, type IGoogleCalendarClient } from './google-calendar.client';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -48,6 +52,12 @@ export class ServiceRegistry {
   readonly asana: AsanaService;
   readonly registration: RegistrationService;
   readonly emailQueue: EmailQueueService;
+
+  // Sprint 4 services
+  readonly meetupClient: IMeetupClient;
+  readonly meetup: MeetupService;
+  readonly googleCalendarClient: IGoogleCalendarClient;
+  readonly googleCalendar: GoogleCalendarService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -91,6 +101,18 @@ export class ServiceRegistry {
     }
 
     this.registration = new RegistrationService(defaultPrisma);
+
+    // Sprint 4 services — Meetup, Google Calendar
+    if (process.env.NODE_ENV === 'test') {
+      this.meetupClient = new MockMeetupClient();
+      this.googleCalendarClient = new MockGoogleCalendarClient();
+    } else {
+      this.meetupClient = new RealMeetupClient();
+      this.googleCalendarClient = new RealGoogleCalendarClient();
+    }
+
+    this.meetup = new MeetupService(defaultPrisma, this.meetupClient, this.content);
+    this.googleCalendar = new GoogleCalendarService(defaultPrisma, this.googleCalendarClient);
   }
 
   static create(source?: ServiceSource): ServiceRegistry {

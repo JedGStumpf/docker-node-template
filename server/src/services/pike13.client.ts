@@ -37,6 +37,11 @@ export interface IPike13Client {
    * Returns an array of { start, end } windows.
    */
   getAvailableSlots(pike13UserId: string, dateRange: DateRange, accessToken?: string): Promise<Pike13AppointmentSlot[]>;
+
+  /**
+   * Book an instructor via Pike13 desk API.
+   */
+  bookInstructor(pike13UserId: string, date: Date, classSlug: string): Promise<{ appointmentId: string } | null>;
 }
 
 /**
@@ -124,6 +129,39 @@ export class RealPike13Client implements IPike13Client {
       end: new Date(a.end_at || a.end),
     }));
   }
+
+  async bookInstructor(pike13UserId: string, date: Date, classSlug: string): Promise<{ appointmentId: string } | null> {
+    const serviceToken = process.env.PIKE13_SERVICE_TOKEN;
+    if (!serviceToken) {
+      console.warn('Pike13: PIKE13_SERVICE_TOKEN not configured, skipping booking');
+      return null;
+    }
+
+    try {
+      const resp = await fetch(`${this.baseUrl}/api/v2/desk/appointments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${serviceToken}`,
+        },
+        body: JSON.stringify({
+          appointment: {
+            staff_member_id: pike13UserId,
+            start_at: date.toISOString(),
+            name: classSlug,
+          },
+        }),
+      });
+      if (!resp.ok) {
+        throw new Error(`Pike13 booking failed: ${resp.status} ${resp.statusText}`);
+      }
+      const data: any = await resp.json();
+      return { appointmentId: String(data.appointment?.id || data.id) };
+    } catch (err) {
+      console.error('Pike13 bookInstructor failed:', err);
+      throw err;
+    }
+  }
 }
 
 /**
@@ -179,5 +217,12 @@ export class MockPike13Client implements IPike13Client {
       throw new Error(`Mock Pike13 error for ${pike13UserId}`);
     }
     return this.slotMap.get(pike13UserId) || [];
+  }
+
+  bookInstructorCalls: { pike13UserId: string; date: Date; classSlug: string }[] = [];
+
+  async bookInstructor(pike13UserId: string, date: Date, classSlug: string): Promise<{ appointmentId: string } | null> {
+    this.bookInstructorCalls.push({ pike13UserId, date, classSlug });
+    return { appointmentId: `mock-appt-${Date.now()}` };
   }
 }
