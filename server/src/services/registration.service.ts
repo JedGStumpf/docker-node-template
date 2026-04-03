@@ -34,23 +34,25 @@ export class RegistrationService {
     if (!request.registrationToken || request.registrationToken !== token) {
       throw new ServiceError('Invalid or missing registration token', 401);
     }
-    if (request.status !== 'dates_proposed') {
+    if (request.status !== 'dates_proposed' && request.status !== 'confirmed') {
       throw new ServiceError('Registration is not currently open for this event', 422);
     }
 
-    // Validate availableDates is a non-empty subset of proposedDates
-    if (!data.availableDates || data.availableDates.length === 0) {
-      throw new ServiceError('availableDates must be a non-empty array', 422);
-    }
-    const proposedSet = new Set(
-      (Array.isArray(request.proposedDates) ? request.proposedDates : []).map(String),
-    );
-    for (const d of data.availableDates) {
-      if (!proposedSet.has(String(d))) {
-        throw new ServiceError(
-          `Date ${d} is not one of the proposed dates`,
-          422,
-        );
+    // Validate availableDates for date-voting (dates_proposed) events
+    if (request.status === 'dates_proposed') {
+      if (!data.availableDates || data.availableDates.length === 0) {
+        throw new ServiceError('availableDates must be a non-empty array', 422);
+      }
+      const proposedSet = new Set(
+        (Array.isArray(request.proposedDates) ? request.proposedDates : []).map(String),
+      );
+      for (const d of data.availableDates) {
+        if (!proposedSet.has(String(d))) {
+          throw new ServiceError(
+            `Date ${d} is not one of the proposed dates`,
+            422,
+          );
+        }
       }
     }
 
@@ -67,6 +69,21 @@ export class RegistrationService {
       throw new ServiceError("You've already registered for this event", 409);
     }
 
+    // Determine registration status based on capacity (confirmed events)
+    let registrationStatus = 'interested';
+    if (request.status === 'confirmed') {
+      registrationStatus = 'confirmed';
+      // Check capacity for confirmed events
+      if (request.eventCapacity != null) {
+        const confirmedCount = await this.prisma.registration.count({
+          where: { requestId, status: 'confirmed' },
+        });
+        if (confirmedCount >= request.eventCapacity) {
+          registrationStatus = 'waitlisted';
+        }
+      }
+    }
+
     const registration = await this.prisma.registration.create({
       data: {
         requestId,
@@ -74,7 +91,7 @@ export class RegistrationService {
         attendeeEmail: data.attendeeEmail,
         numberOfKids: data.numberOfKids,
         availableDates: data.availableDates,
-        status: 'interested',
+        status: registrationStatus,
       },
     });
 
@@ -82,6 +99,91 @@ export class RegistrationService {
     await this.checkAndFinalizeThreshold(requestId);
 
     return registration;
+  }
+
+  /**
+   * Cancel a registration. If the cancelled registration was confirmed
+   * and there are waitlisted registrations, promote the oldest one.
+   */
+  async cancelRegistration(registrationId: string, emailService?: any): Promise<any> {
+    const registration = await this.prisma.registration.findUnique({
+      where: { id: registrationId },
+    });
+    if (!registration) {
+      throw new ServiceError('Registration not found', 404);
+    }
+    if (registration.status === 'cancelled') {
+      return registration; // idempotent
+    }
+
+    const wasConfirmed = registration.status === 'confirmed';
+
+    const updated = await this.prisma.registration.update({
+      where: { id: registrationId },
+      data: { status: 'cancelled' },
+    });
+
+    // If the cancelled registration was confirmed, try to promote from waitlist
+    if (wasConfirmed) {
+      await this.promoteFromWaitlist(registration.requestId, emailService);
+    }
+
+    return updated;
+  }
+
+  /**
+   * Promote the oldest waitlisted registration to confirmed.
+   * Sends an iCal invite email to the promoted attendee.
+   */
+  async promoteFromWaitlist(requestId: string, emailService?: any): Promise<any | null> {
+    const request = await this.prisma.eventRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (!request || request.status !== 'confirmed') {
+      return null;
+    }
+
+    // Check if there's actually capacity available
+    if (request.eventCapacity != null) {
+      const confirmedCount = await this.prisma.registration.count({
+        where: { requestId, status: 'confirmed' },
+      });
+      if (confirmedCount >= request.eventCapacity) {
+        return null; // still full
+      }
+    }
+
+    // Find oldest waitlisted registration
+    const waitlisted = await this.prisma.registration.findFirst({
+      where: { requestId, status: 'waitlisted' },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!waitlisted) {
+      return null;
+    }
+
+    const promoted = await this.prisma.registration.update({
+      where: { id: waitlisted.id },
+      data: { status: 'confirmed' },
+    });
+
+    // Send iCal invite to promoted registrant
+    if (emailService) {
+      try {
+        await emailService.sendEventConfirmation(promoted.attendeeEmail, {
+          title: request.classSlug,
+          date: request.confirmedDate || new Date(),
+          location: request.locationFreeText,
+          organizerEmail: process.env.ADMIN_EMAIL || 'admin@jointheleague.org',
+          replyTo: request.emailThreadAddress,
+        });
+      } catch {
+        // Don't fail promotion if email fails
+      }
+    }
+
+    return promoted;
   }
 
   /**

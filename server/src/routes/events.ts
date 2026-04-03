@@ -63,8 +63,8 @@ eventsRouter.post('/events/:requestId/register', async (req: Request, res: Respo
     if (!numberOfKids || typeof numberOfKids !== 'number' || numberOfKids < 1 || !Number.isInteger(numberOfKids)) {
       return res.status(400).json({ error: 'numberOfKids must be an integer ≥ 1' });
     }
-    if (!Array.isArray(availableDates) || availableDates.length === 0) {
-      return res.status(400).json({ error: 'availableDates must be a non-empty array' });
+    if (!Array.isArray(availableDates)) {
+      return res.status(400).json({ error: 'availableDates must be an array' });
     }
 
     const registration = await req.services.registration.createRegistration(
@@ -92,5 +92,47 @@ eventsRouter.get('/events/:requestId/registrations', requireInstructor, async (r
       return res.status(err.statusCode).json({ error: err.message });
     }
     return res.status(500).json({ error: 'Failed to list registrations', detail: err.message });
+  }
+});
+
+/** POST /api/events/:requestId/registrations/:id/cancel — Cancel a registration */
+eventsRouter.post('/events/:requestId/registrations/:id/cancel', async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body || {};
+
+    if (!token || typeof token !== 'string') {
+      return res.status(401).json({ error: 'Registration token is required' });
+    }
+
+    // Verify the registration token matches the request
+    const request = await req.services.prisma.eventRequest.findUnique({
+      where: { id: req.params.requestId },
+    });
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    if (request.registrationToken !== token) {
+      return res.status(401).json({ error: 'Invalid registration token' });
+    }
+
+    // Verify the registration belongs to this request
+    const registration = await req.services.prisma.registration.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!registration || registration.requestId !== req.params.requestId) {
+      return res.status(404).json({ error: 'Registration not found' });
+    }
+
+    const updated = await req.services.registration.cancelRegistration(
+      req.params.id,
+      req.services.email,
+    );
+
+    return res.json(updated);
+  } catch (err: any) {
+    if (err instanceof ServiceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Failed to cancel registration', detail: err.message });
   }
 });
