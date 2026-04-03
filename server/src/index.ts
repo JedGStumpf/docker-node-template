@@ -90,6 +90,10 @@ initPrisma().then(() => initConfigCache()).then(async () => {
       }
     }
   });
+  // Sprint 5: Equipment readiness check — daily
+  registry.scheduler.registerHandler('equipment-readiness-check', async () => {
+    await registry.equipment.equipmentReadinessCheck();
+  });
   registry.scheduler.startTicking();
 
   // Sprint 1: Background jobs — not registered in test env

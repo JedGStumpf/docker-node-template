@@ -169,6 +169,113 @@ export class EquipmentService {
   }
 
   /**
+   * Daily job: check all pending_checkout assignments and transition or remind.
+   */
+  async equipmentReadinessCheck(): Promise<{ processed: number; transitioned: number; reminded: number }> {
+    const pendingAssignments = await this.prisma.instructorAssignment.findMany({
+      where: {
+        equipmentStatus: 'pending_checkout',
+        status: { not: 'timed_out' },
+      },
+      include: { instructor: true, request: true },
+    });
+
+    let transitioned = 0;
+    let reminded = 0;
+
+    for (const assignment of pendingAssignments) {
+      // Skip cancelled assignments
+      if (assignment.status === 'declined') continue;
+
+      const { instructor, request } = assignment;
+
+      if (!instructor.inventoryUserId) {
+        console.warn(
+          `equipment-readiness-check: instructor ${instructor.id} has no inventoryUserId, skipping`,
+        );
+        continue;
+      }
+
+      // Load equipment requirements
+      let classRecord: any = null;
+      try {
+        classRecord = await this.content.getClassBySlug(request.classSlug);
+      } catch {
+        // Ignore
+      }
+      const required = this.parseEquipmentNeeded(classRecord?.equipmentNeeded);
+      if (!required) {
+        console.warn(
+          `equipment-readiness-check: no equipment data for class ${request.classSlug}, skipping`,
+        );
+        continue;
+      }
+
+      // Re-query inventory
+      let checkedOut: any[] = [];
+      try {
+        checkedOut = await this.inventoryClient.getCheckouts(instructor.inventoryUserId);
+      } catch (err: any) {
+        console.error(
+          `equipment-readiness-check: inventory error for assignment ${assignment.id}: ${err.message}`,
+        );
+        continue; // Do not change status on error
+      }
+
+      const stillNeeded = this.computeStillNeeded(required, checkedOut);
+      const now = new Date();
+
+      if (stillNeeded.length === 0) {
+        // Transition to ready
+        await this.prisma.instructorAssignment.update({
+          where: { id: assignment.id },
+          data: { equipmentStatus: 'ready', equipmentCheckedAt: now },
+        });
+
+        await this.email.sendEquipmentReadyEmail({
+          to: instructor.email,
+          instructorName: instructor.displayName,
+          classSlug: request.classSlug,
+          items: required,
+        });
+        transitioned++;
+      } else {
+        // Send daily reminder
+        const newReminderCount = (assignment.equipmentReminderCount || 0) + 1;
+        await this.prisma.instructorAssignment.update({
+          where: { id: assignment.id },
+          data: {
+            equipmentReminderCount: newReminderCount,
+            equipmentCheckedAt: now,
+          },
+        });
+
+        // Compute days until event
+        const confirmedDate = request.confirmedDate ? new Date(request.confirmedDate) : null;
+        const daysUntilEvent = confirmedDate
+          ? Math.max(0, Math.ceil((confirmedDate.getTime() - now.getTime()) / 86400000))
+          : 0;
+
+        await this.email.sendEquipmentCheckoutReminderEmail({
+          to: instructor.email,
+          instructorName: instructor.displayName,
+          classSlug: request.classSlug,
+          itemsNeeded: stillNeeded,
+          daysUntilEvent,
+          reminderCount: assignment.equipmentReminderCount || 0,
+        });
+        reminded++;
+      }
+    }
+
+    console.log(
+      `equipment-readiness-check: processed=${pendingAssignments.length}, transitioned=${transitioned}, reminded=${reminded}`,
+    );
+
+    return { processed: pendingAssignments.length, transitioned, reminded };
+  }
+
+  /**
    * Get full equipment status details for an assignment.
    */
   async getEquipmentStatus(assignmentId: string): Promise<{
