@@ -80,7 +80,6 @@ export class ServiceRegistry {
     }
 
     this.matching = new MatchingService(defaultPrisma, this.pike13Client);
-    this.requests = new RequestService(defaultPrisma);
     this.instructors = new InstructorService(defaultPrisma);
 
     this.emailQueue = new EmailQueueService(defaultPrisma);
@@ -113,6 +112,12 @@ export class ServiceRegistry {
 
     this.meetup = new MeetupService(defaultPrisma, this.meetupClient, this.content);
     this.googleCalendar = new GoogleCalendarService(defaultPrisma, this.googleCalendarClient);
+
+    this.requests = new RequestService(defaultPrisma, {
+      meetupService: this.meetup,
+      googleCalendarService: this.googleCalendar,
+      pike13Client: this.pike13Client,
+    });
   }
 
   static create(source?: ServiceSource): ServiceRegistry {

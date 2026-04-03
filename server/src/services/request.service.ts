@@ -5,6 +5,9 @@
 import crypto from 'crypto';
 import { ulid } from 'ulid';
 import { ServiceError } from '../errors';
+import type { MeetupService } from './meetup.service';
+import type { GoogleCalendarService } from './google-calendar.service';
+import type { IPike13Client } from './pike13.client';
 
 export interface CreateRequestInput {
   classSlug: string;
@@ -48,7 +51,19 @@ const VALID_TRANSITIONS: Record<string, Set<string>> = {
 };
 
 export class RequestService {
-  constructor(private prisma: any) {}
+  private meetupService?: MeetupService;
+  private googleCalendarService?: GoogleCalendarService;
+  private pike13Client?: IPike13Client;
+
+  constructor(private prisma: any, opts?: {
+    meetupService?: MeetupService;
+    googleCalendarService?: GoogleCalendarService;
+    pike13Client?: IPike13Client;
+  }) {
+    this.meetupService = opts?.meetupService;
+    this.googleCalendarService = opts?.googleCalendarService;
+    this.pike13Client = opts?.pike13Client;
+  }
 
   async createRequest(input: CreateRequestInput) {
     const verificationToken = crypto.randomUUID();
@@ -328,6 +343,60 @@ export class RequestService {
       data: updateData,
       include: { site: true, registrations: true },
     });
+
+    // Side effect: Create external events on confirmed transition
+    if (newStatus === 'confirmed') {
+      // 1. Meetup event (public events only)
+      if (this.meetupService && updated.groupType === 'public') {
+        try {
+          const meetupResult = await this.meetupService.createMeetupEvent(updated);
+          if (meetupResult) {
+            await this.prisma.eventRequest.update({
+              where: { id: requestId },
+              data: {
+                meetupEventId: meetupResult.meetupEventId,
+                meetupEventUrl: meetupResult.meetupEventUrl,
+              },
+            });
+          }
+        } catch (err) {
+          console.error('RequestService: Meetup event creation failed', err);
+        }
+      }
+
+      // 2. Google Calendar event (all events)
+      if (this.googleCalendarService) {
+        try {
+          const calEventId = await this.googleCalendarService.createCalendarEvent(updated);
+          if (calEventId) {
+            await this.prisma.eventRequest.update({
+              where: { id: requestId },
+              data: { googleCalendarEventId: calEventId },
+            });
+          }
+        } catch (err) {
+          console.error('RequestService: Google Calendar event creation failed', err);
+        }
+      }
+
+      // 3. Pike13 instructor booking (when instructor is assigned)
+      if (this.pike13Client && updated.assignedInstructorId) {
+        try {
+          const instructor = await this.prisma.instructorProfile.findUnique({
+            where: { id: updated.assignedInstructorId },
+          });
+          if (instructor?.pike13UserId) {
+            await this.pike13Client.bookInstructor(
+              instructor.pike13UserId,
+              updated.confirmedDate || new Date(),
+              updated.classSlug,
+            );
+          }
+        } catch (err) {
+          console.error('RequestService: Pike13 booking failed', err);
+        }
+      }
+    }
 
     // Side effect: Send cancellation emails after transition to cancelled
     if (newStatus === 'cancelled' && emailService) {
