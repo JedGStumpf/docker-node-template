@@ -32,6 +32,11 @@ import { GoogleCalendarService } from './google-calendar.service';
 import { MockGoogleCalendarClient, RealGoogleCalendarClient, type IGoogleCalendarClient } from './google-calendar.client';
 import { StubInventoryClient, type IInventoryClient } from './inventory';
 import { EquipmentService } from './equipment.service';
+import {
+  EmailExtractionService,
+  RealAnthropicClient,
+  MockAnthropicClient,
+} from './email-extraction.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -64,6 +69,7 @@ export class ServiceRegistry {
   // Sprint 5 services
   readonly inventoryClient: IInventoryClient;
   readonly equipment: EquipmentService;
+  readonly emailExtraction: EmailExtractionService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -122,6 +128,15 @@ export class ServiceRegistry {
     // Sprint 5: Inventory client — always stub in Sprint 5 (real HTTP client is a follow-on task)
     this.inventoryClient = new StubInventoryClient();
     this.equipment = new EquipmentService(defaultPrisma, this.inventoryClient, this.content, this.email);
+
+    // Email extraction service — uses mock in test, real client in production (if API key set)
+    const anthropicClient =
+      process.env.NODE_ENV === 'test'
+        ? new MockAnthropicClient()
+        : process.env.ANTHROPIC_API_KEY
+          ? new RealAnthropicClient()
+          : null;
+    this.emailExtraction = new EmailExtractionService(defaultPrisma, anthropicClient);
 
     // Wire equipment service into instructor service (avoiding circular constructor dependency)
     this.instructors.setEquipmentService(this.equipment);

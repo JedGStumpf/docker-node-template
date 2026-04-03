@@ -119,7 +119,10 @@ adminRequestsRouter.get('/requests/:id', requirePike13Admin, async (req: Request
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    return res.json(requestRecord);
+    // Sprint 5: include latest email extraction
+    const latestExtraction = await req.services.emailExtraction.getLatestExtraction(req.params.id);
+
+    return res.json({ ...requestRecord, latestExtraction: latestExtraction || null });
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to fetch request', detail: err.message });
   }
@@ -232,6 +235,30 @@ adminRequestsRouter.put('/requests/:id', requirePike13Admin, async (req: Request
     return res.status(500).json({ error: 'Failed to update request', detail: err.message });
   }
 });
+
+/** POST /api/admin/requests/:id/apply-extraction/:extractionId — Apply AI extraction signal */
+adminRequestsRouter.post(
+  '/requests/:id/apply-extraction/:extractionId',
+  requirePike13Admin,
+  async (req: Request, res: Response) => {
+    try {
+      const adminEmail = (req.session as any)?.pike13Email || 'admin';
+      const result = await req.services.emailExtraction.applyExtraction(
+        req.params.extractionId,
+        adminEmail,
+      );
+      return res.json(result);
+    } catch (err: any) {
+      if (err.message?.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      if (err.message?.includes('no applicable')) {
+        return res.status(422).json({ error: err.message });
+      }
+      return res.status(500).json({ error: 'Failed to apply extraction', detail: err.message });
+    }
+  },
+);
 
 /** POST /api/admin/requests/:id/finalize-date — Manually finalize a date */
 adminRequestsRouter.post('/requests/:id/finalize-date', requirePike13Admin, async (req: Request, res: Response) => {
