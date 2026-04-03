@@ -64,11 +64,22 @@ Index on `(status, nextRetryAt)` for efficient queue polling.
 - **Constructor change:** Accepts `EmailQueueService` in addition to `IEmailTransport`. The transport is stored but only used by the queue worker (not by method callers).
 - **Test compatibility:** `InMemoryEmailTransport.sent` still works in tests because the test `email-sender` job can be invoked manually to flush the queue. Alternatively, tests can inspect `EmailQueue` rows directly.
 
-**`RequestService.transitionStatus()`** — Extended `confirmed` transition side effects:
-- **Meetup:** If `eventType === 'public'`, call `meetupService.createMeetupEvent()`. Store result on request.
-- **Google Calendar:** Call `googleCalendarService.createCalendarEvent()`. Store result on request.
-- **Pike13 write-back:** If `assignedInstructorId` is set, look up instructor's `pike13UserId`, call `pike13Client.bookInstructor()`.
+**`RequestService`** — Constructor extended to accept `MeetupService`, `GoogleCalendarService`, and `IPike13Client` via a typed options object:
+```typescript
+constructor(prisma: any, opts?: {
+  meetupService?: MeetupService;
+  googleCalendarService?: GoogleCalendarService;
+  pike13Client?: IPike13Client;
+})
+```
+This eliminates the growing parameter list on `transitionStatus()`. The method accesses services from `this.meetupService`, etc.
+
+`transitionStatus()` — Extended `confirmed` transition side effects:
+- **Meetup:** If `eventType === 'public'`, call `this.meetupService.createMeetupEvent()`. Store result on request.
+- **Google Calendar:** Call `this.googleCalendarService.createCalendarEvent()`. Store result on request.
+- **Pike13 write-back:** If `assignedInstructorId` is set, look up instructor's `pike13UserId`, call `this.pike13Client.bookInstructor()`.
 - All three are best-effort: failures are logged and don't roll back the confirmation.
+- Services are optional — if not injected (null/undefined), the side effect is skipped silently.
 
 **`RegistrationService`** — Extended for waitlist:
 - `createRegistration()` — After confirming status, checks capacity: if event is `confirmed` and `eventCapacity` is set and confirmed kid count ≥ `eventCapacity`, creates registration with `status: waitlisted`.
@@ -103,7 +114,7 @@ Index on `(status, nextRetryAt)` for efficient queue polling.
 
 | Job | Frequency | Purpose |
 |-----|-----------|---------|
-| `email-sender` | Every 5 minutes | Process pending email queue rows |
+| `email-sender` | Every tick (60s) | Process pending email queue rows (runs on every scheduler tick; internal batch size limits throughput) |
 | `meetup-rsvp-sync` | Daily | Sync RSVP counts for confirmed public events |
 
 ### New npm Dependencies
@@ -140,10 +151,14 @@ New columns on `EventRequest` are all nullable or have defaults — additive mig
 
 SQLite schema generated via `server/prisma/sqlite-push.sh`. New fields are all simple types (String, Int, DateTime) — no array field handling needed for the new columns.
 
-## Open Questions
+## Decisions
 
-1. **Meetup group mapping:** The spec (§4.5) mentions `groups.json` maps class subgroups to Meetup groups. Is this file available from `ContentService`, or does it need a separate fetch? What's the fallback if a class has no mapping?
+1. **Meetup group mapping:** `ContentService` will add a `getGroupsJson()` method fetching from a `GROUPS_JSON_URL` env var (derived from `CONTENT_JSON_URL` base). Fallback: if no mapping exists for a class slug, use `MEETUP_GROUP_URLNAME` env var.
 
-2. **Google Calendar event timing:** For private events, `confirmedDate` stores only a date (no time). Should the calendar event be all-day, or should we use a default time (e.g. 10am–12pm)?
+2. **Google Calendar event timing:** Use all-day events for date-only `confirmedDate` values. The spec does not define event times, and assuming a default would be fragile. Admins can manually adjust in Google Calendar.
 
-3. **Email queue — test strategy:** Refactoring `EmailService` to enqueue affects every existing test that checks `InMemoryEmailTransport.sent`. Two options: (a) add a `flushQueue()` helper that processes the queue synchronously in tests, or (b) bypass the queue in test mode and send directly. Which approach?
+3. **Email queue — test strategy:** Use a `flushQueue()` test helper that calls `emailQueueService.processPending(transport, 100)` synchronously. This preserves the queue code path in tests (no test/production divergence) and is less invasive than bypassing. All existing tests that check `InMemoryEmailTransport.sent` will call `flushQueue()` after the action under test.
+
+4. **Scheduler frequency for `email-sender`:** The `email-sender` job runs on every scheduler tick (60s default interval). No new frequency type needed — the job is registered with `frequency: 'tick'` or simply invoked in the `tick()` loop without a `ScheduledJob` row. Recommended approach: register as a handler on `SchedulerService` that runs on every tick, using `nextRun` set to 1 minute in the future.
+
+5. **`transitionStatus()` complexity:** Growing side-effect count is noted as a future refactoring candidate. For now, constructor injection keeps the method signature clean. A `TransitionSideEffects` strategy pattern can be extracted in a later sprint if complexity grows further.

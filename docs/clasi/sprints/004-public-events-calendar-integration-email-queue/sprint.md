@@ -58,14 +58,14 @@ Sprint 3 delivered the private event lifecycle (date voting, headcount threshold
 - `syncRsvps(requestId)` — pulls RSVP data from Meetup, stores count on request.
 - Side effect on `confirmed` transition when `eventType === 'public'`: call `MeetupService.createMeetupEvent()`.
 - Scheduled job `meetup-rsvp-sync` (daily): syncs RSVPs for confirmed public events until the event date.
-- `EventRequest` schema: add `meetupEventId` (String, nullable), `meetupRsvpCount` (Int, default 0).
+- `EventRequest` schema: add `meetupEventId` (String, nullable), `meetupEventUrl` (String, nullable), `meetupRsvpCount` (Int, default 0).
 
 **Google Calendar integration (spec §3.3 step 10, §3.4 step 7):**
 - `GoogleCalendarService` with service account auth.
 - `createCalendarEvent(request)` — adds event to shared League calendar.
 - Side effect on `confirmed` transition: call `GoogleCalendarService.createCalendarEvent()`.
 - `EventRequest` schema: add `googleCalendarEventId` (String, nullable).
-- Graceful degradation: returns 501 if `GOOGLE_CALENDAR_ID` or credentials missing.
+- Graceful degradation: if `GOOGLE_CALENDAR_ID` or credentials missing, logs a warning and skips (no error thrown, confirmation proceeds).
 
 **Pike13 write-back (spec §3.5, §4.1):**
 - Extend `IPike13Client` with `bookInstructor(pike13UserId, date, classSlug)`.
