@@ -1,7 +1,7 @@
 ---
 id: "001"
 title: "Database migrations: EmailExtraction model and equipment readiness fields"
-status: todo
+status: done
 use-cases:
   - SUC-001
   - SUC-005
@@ -43,13 +43,13 @@ Also update `ServiceRegistry.clearAll()` to include `emailExtraction.deleteMany(
 
 ## Acceptance Criteria
 
-- [ ] `npx prisma migrate dev` runs without error on a clean database.
-- [ ] `EmailExtraction` model is queryable via Prisma client.
-- [ ] `InstructorAssignment` rows have `equipmentStatus` defaulting to `"unknown"`.
-- [ ] `InstructorProfile` rows have `inventoryUserId` as null.
-- [ ] SQLite schema generated via `sqlite-push.sh` reflects all new fields.
-- [ ] `ServiceRegistry.clearAll()` includes `emailExtraction.deleteMany()` before `emailQueue.deleteMany()`.
-- [ ] `npm run test:server` passes green (no regressions from model changes).
+- [x] `npx prisma migrate dev` runs without error on a clean database.
+- [x] `EmailExtraction` model is queryable via Prisma client.
+- [x] `InstructorAssignment` rows have `equipmentStatus` defaulting to `"unknown"`.
+- [x] `InstructorProfile` rows have `inventoryUserId` as null.
+- [x] SQLite schema generated via `sqlite-push.sh` reflects all new fields.
+- [x] `ServiceRegistry.clearAll()` includes `emailExtraction.deleteMany()` before `emailQueue.deleteMany()`.
+- [x] `npm run test:server` passes green (no regressions from model changes).
 
 ## Testing
 
