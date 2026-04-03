@@ -16,7 +16,14 @@ export interface InstructorProfileInput {
 }
 
 export class InstructorService {
+  private equipmentService?: any;
+
   constructor(private prisma: any) {}
+
+  /** Inject EquipmentService to avoid circular dependency at construction time. */
+  setEquipmentService(equipmentService: any) {
+    this.equipmentService = equipmentService;
+  }
 
   async getProfile(pike13UserId: string) {
     return this.prisma.instructorProfile.findUnique({
@@ -98,6 +105,13 @@ export class InstructorService {
         where: { id: assignment.requestId },
         data: { assignedInstructorId: assignment.instructorId },
       });
+
+      // Fire-and-forget equipment readiness check
+      if (this.equipmentService) {
+        this.equipmentService.checkReadiness(assignmentId).catch((err: any) => {
+          console.error(`EquipmentService.checkReadiness failed for ${assignmentId}:`, err);
+        });
+      }
     }
 
     return updated;

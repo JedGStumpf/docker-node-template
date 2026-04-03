@@ -84,6 +84,40 @@ instructorRouter.post('/instructor/assignments/:id/accept', async (req: Request,
   }
 });
 
+/** GET /api/assignments/:id/equipment-status */
+instructorRouter.get('/assignments/:id/equipment-status', requireInstructor, async (req: Request, res: Response) => {
+  try {
+    const assignmentId = firstString(req.params.id);
+    if (!assignmentId) return res.status(400).json({ error: 'Missing assignment id' });
+
+    const pike13UserId = (req.session as any).pike13UserId as string;
+    const pike13Role = (req.session as any).pike13Role as string;
+
+    // Load assignment to check ownership
+    const assignment = await req.services.prisma.instructorAssignment.findUnique({
+      where: { id: assignmentId },
+      include: { instructor: true },
+    });
+
+    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
+
+    // Instructors can only see their own assignments; admins see all
+    if (pike13Role !== 'admin' && assignment.instructor.pike13UserId !== pike13UserId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const status = await req.services.equipment.getEquipmentStatus(assignmentId);
+    if (!status) return res.status(404).json({ error: 'Assignment not found' });
+
+    res.json(status);
+  } catch (err: any) {
+    if (err instanceof ServiceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 /** POST /api/instructor/assignments/:id/decline */
 instructorRouter.post('/instructor/assignments/:id/decline', async (req: Request, res: Response) => {
   try {
