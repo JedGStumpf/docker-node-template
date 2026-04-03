@@ -124,16 +124,23 @@ Mock clients for Meetup API, Google Calendar API, and Pike13 write via interface
 
 ## Tickets
 
-(To be created after architecture review and stakeholder approval.)
+| # | Title | Depends On | Use Cases |
+|---|-------|-----------|-----------|
+| 001 | Schema migration — EmailQueue model and EventRequest fields | — | — |
+| 002 | EmailQueueService and email-sender scheduled job | 001 | SUC-002, SUC-007 |
+| 003 | MeetupService with IMeetupClient interface | 001 | SUC-001, SUC-003 |
+| 004 | GoogleCalendarService with service account auth | 001 | SUC-003 |
+| 005 | Pike13 write-back — bookInstructor on confirmation | — | SUC-004 |
+| 006 | RequestService confirmed transition side effects | 003, 004, 005 | SUC-001, SUC-003, SUC-004 |
+| 007 | Registration waitlist — capacity check, cancellation, promotion | 001, 002 | SUC-005, SUC-006, SUC-009 |
+| 008 | Scheduled jobs — email-sender and meetup-rsvp-sync | 002, 003 | SUC-002, SUC-007 |
+| 009 | Admin routes — email queue management, event capacity | 002, 007 | SUC-008, SUC-009 |
+| 010 | Client — admin UI updates for Meetup, calendar, waitlist, email queue | 006, 007, 009 | SUC-001, SUC-003, SUC-005, SUC-008 |
 
 ## Definition of Ready
 
 Before tickets can be created, all of the following must be true:
 
-- [ ] Sprint planning documents are complete (sprint.md, use cases, architecture)
-- [ ] Architecture review passed
-- [ ] Stakeholder has approved the sprint plan
-
-## Tickets
-
-(To be created after sprint approval.)
+- [x] Sprint planning documents are complete (sprint.md, use cases, architecture)
+- [x] Architecture review passed
+- [x] Stakeholder has approved the sprint plan
