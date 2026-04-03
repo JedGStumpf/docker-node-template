@@ -21,6 +21,7 @@ import { sitesRouter } from './routes/sites';
 import { siteRegistrationRouter } from './routes/site-registration';
 import { siteRepRouter } from './routes/site-rep';
 import { eventsRouter } from './routes/events';
+import { webhooksRouter } from './routes/webhooks';
 import { mcpTokenAuth } from './middleware/mcpAuth';
 import { createMcpHandler } from './mcp/handler';
 import { errorHandler } from './middleware/errorHandler';
@@ -109,6 +110,7 @@ app.use('/api', sitesRouter);
 app.use('/api', siteRegistrationRouter);
 app.use('/api', siteRepRouter);
 app.use('/api', eventsRouter);
+app.use('/api', webhooksRouter);
 
 // MCP endpoint — token-based auth, separate from session auth
 app.post('/api/mcp', mcpTokenAuth, createMcpHandler());

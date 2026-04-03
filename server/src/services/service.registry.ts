@@ -37,6 +37,7 @@ import {
   RealAnthropicClient,
   MockAnthropicClient,
 } from './email-extraction.service';
+import { AsanaWebhookService } from './asana-webhook.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -70,6 +71,7 @@ export class ServiceRegistry {
   readonly inventoryClient: IInventoryClient;
   readonly equipment: EquipmentService;
   readonly emailExtraction: EmailExtractionService;
+  readonly asanaWebhook: AsanaWebhookService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -106,9 +108,9 @@ export class ServiceRegistry {
     this.sites = new SiteService(defaultPrisma);
 
     if (process.env.NODE_ENV === 'production') {
-      this.asana = new AsanaService(new RealAsanaClient());
+      this.asana = new AsanaService(new RealAsanaClient(), defaultPrisma);
     } else {
-      this.asana = new AsanaService(new MockAsanaClient());
+      this.asana = new AsanaService(new MockAsanaClient(), defaultPrisma);
     }
 
     this.registration = new RegistrationService(defaultPrisma);
@@ -137,6 +139,7 @@ export class ServiceRegistry {
           ? new RealAnthropicClient()
           : null;
     this.emailExtraction = new EmailExtractionService(defaultPrisma, anthropicClient);
+    this.asanaWebhook = new AsanaWebhookService(defaultPrisma);
 
     // Wire equipment service into instructor service (avoiding circular constructor dependency)
     this.instructors.setEquipmentService(this.equipment);

@@ -1,7 +1,7 @@
 import type { IAsanaClient } from './asana.client';
 
 export class AsanaService {
-  constructor(private client: IAsanaClient) {}
+  constructor(private client: IAsanaClient, private prisma?: any) {}
 
   async createRequestTask(request: {
     id: string;
@@ -44,6 +44,53 @@ export class AsanaService {
     } catch (error) {
       console.warn('AsanaService: failed to create task, continuing without Asana', error);
       return null;
+    }
+  }
+
+  /**
+   * Sprint 5: Post an AI extraction summary as a comment on the Asana task.
+   * Fire-and-forget: errors are caught and logged.
+   */
+  async pushExtractionUpdate(requestId: string, extraction: {
+    statusSignal?: string | null;
+    actionItems?: string[];
+    hostRegistrationCount?: number | null;
+  }): Promise<void> {
+    if (!process.env.ASANA_ACCESS_TOKEN) {
+      return; // Graceful degradation
+    }
+
+    if (!this.prisma) return;
+
+    const request = await this.prisma.eventRequest.findUnique({
+      where: { id: requestId },
+      select: { asanaTaskId: true },
+    }).catch(() => null);
+
+    if (!request?.asanaTaskId) {
+      console.log(`AsanaService: no Asana task for request ${requestId}, skipping comment`);
+      return;
+    }
+
+    const actionItemsStr = extraction.actionItems?.length
+      ? extraction.actionItems.join('; ')
+      : 'none';
+
+    const comment = [
+      'AI extraction from inbound email:',
+      `Status signal: ${extraction.statusSignal || 'none'}`,
+      `Action items: ${actionItemsStr}`,
+      extraction.hostRegistrationCount != null
+        ? `Host registration count: ${extraction.hostRegistrationCount}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    try {
+      await this.client.addComment(request.asanaTaskId, comment);
+    } catch (err: any) {
+      console.error(`AsanaService: failed to add comment to task ${request.asanaTaskId}: ${err.message}`);
     }
   }
 }

@@ -5,6 +5,8 @@ export interface IAsanaClient {
     projectGid: string;
     assigneeGid?: string;
   }): Promise<{ gid: string }>;
+
+  addComment(taskGid: string, text: string): Promise<void>;
 }
 
 export class RealAsanaClient implements IAsanaClient {
@@ -44,10 +46,28 @@ export class RealAsanaClient implements IAsanaClient {
     }
     return { gid: String(gid) };
   }
+
+  async addComment(taskGid: string, text: string): Promise<void> {
+    const token = process.env.ASANA_ACCESS_TOKEN || '';
+    await fetch(`https://app.asana.com/api/1.0/tasks/${taskGid}/stories`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ data: { text } }),
+    });
+  }
 }
 
 export class MockAsanaClient implements IAsanaClient {
+  comments: Array<{ taskGid: string; text: string }> = [];
+
   async createTask(): Promise<{ gid: string }> {
     return { gid: `mock-task-${Date.now()}` };
+  }
+
+  async addComment(taskGid: string, text: string): Promise<void> {
+    this.comments.push({ taskGid, text });
   }
 }
