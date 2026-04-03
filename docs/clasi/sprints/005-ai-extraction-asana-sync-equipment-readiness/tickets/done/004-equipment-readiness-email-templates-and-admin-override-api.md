@@ -1,7 +1,7 @@
 ---
 id: "004"
 title: "Equipment readiness email templates and admin override API"
-status: todo
+status: done
 use-cases:
   - SUC-005
   - SUC-007
@@ -48,14 +48,14 @@ All three emails are enqueued via `EmailQueueService` (not sent directly).
 
 ## Acceptance Criteria
 
-- [ ] `equipment-ready` email is enqueued with correct subject and body when status = ready.
-- [ ] `equipment-checkout-prompt` email lists items still needed and includes checkout link if `INVENTORY_CHECKOUT_URL` is set.
-- [ ] `equipment-checkout-prompt` email omits the link gracefully if `INVENTORY_CHECKOUT_URL` is not set.
-- [ ] `equipment-checkout-reminder` email includes days-until-event.
-- [ ] `POST /api/assignments/:id/equipment-status/override` sets `equipmentStatus` for admin.
-- [ ] Override endpoint returns 403 for non-admin callers.
-- [ ] Override to `"ready"` stops the reminder loop (daily job skips `"ready"` assignments).
-- [ ] `npm run test:server` passes green.
+- [x] `equipment-ready` email is enqueued with correct subject and body when status = ready.
+- [x] `equipment-checkout-prompt` email lists items still needed and includes checkout link if `INVENTORY_CHECKOUT_URL` is set.
+- [x] `equipment-checkout-prompt` email omits the link gracefully if `INVENTORY_CHECKOUT_URL` is not set.
+- [x] `equipment-checkout-reminder` email includes days-until-event.
+- [x] `POST /api/assignments/:id/equipment-status/override` sets `equipmentStatus` for admin.
+- [x] Override endpoint returns 403 for non-admin callers.
+- [x] Override to `"ready"` stops the reminder loop (daily job skips `"ready"` assignments).
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
