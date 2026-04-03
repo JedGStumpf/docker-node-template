@@ -12,6 +12,7 @@ import { adminSchedulerRouter } from './scheduler';
 import { adminBackupsRouter } from './backups';
 import { adminRequestsRouter } from './requests';
 import { adminSitesRouter } from './sites';
+import { adminEmailQueueRouter } from './email-queue';
 
 export const adminRouter = Router();
 
@@ -36,3 +37,4 @@ adminRouter.use('/admin', adminPermissionsRouter);
 adminRouter.use('/admin', adminSchedulerRouter);
 adminRouter.use('/admin', adminBackupsRouter);
 adminRouter.use('/admin', adminSitesRouter);
+adminRouter.use('/admin', adminEmailQueueRouter);

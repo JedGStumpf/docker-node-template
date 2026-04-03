@@ -201,6 +201,19 @@ adminRequestsRouter.put('/requests/:id', requirePike13Admin, async (req: Request
       updateData.proposedDates = req.body.proposedDates;
     }
 
+    // eventCapacity (positive integer or null)
+    if (req.body?.eventCapacity !== undefined) {
+      if (req.body.eventCapacity === null) {
+        updateData.eventCapacity = null;
+      } else {
+        const cap = Number(req.body.eventCapacity);
+        if (!Number.isInteger(cap) || cap < 1) {
+          return res.status(422).json({ error: 'eventCapacity must be a positive integer or null' });
+        }
+        updateData.eventCapacity = cap;
+      }
+    }
+
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: 'No valid fields to update' });
     }
