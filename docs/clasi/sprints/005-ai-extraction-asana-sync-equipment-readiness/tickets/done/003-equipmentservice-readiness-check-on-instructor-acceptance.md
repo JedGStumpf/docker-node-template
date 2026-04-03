@@ -1,7 +1,7 @@
 ---
 id: "003"
 title: "EquipmentService: readiness check on instructor acceptance"
-status: todo
+status: done
 use-cases:
   - SUC-005
 depends-on:
@@ -54,14 +54,14 @@ Implement `EquipmentService` at `server/src/services/equipment.service.ts`. This
 
 ## Acceptance Criteria
 
-- [ ] `checkReadiness()` sets `equipmentStatus = "ready"` and enqueues confirmation email when stub returns complete inventory.
-- [ ] `checkReadiness()` sets `equipmentStatus = "pending_checkout"` and enqueues prompt email when stub returns partial inventory.
-- [ ] `checkReadiness()` sets `equipmentStatus = "unknown"` (no email) when `inventoryUserId` is null.
-- [ ] `checkReadiness()` sets `equipmentStatus = "unknown"` (no email) when inventory client throws.
-- [ ] `InstructorService.acceptAssignment()` triggers the check asynchronously; errors do not propagate to caller.
-- [ ] `GET /api/assignments/:id/equipment-status` returns correct shape for all three statuses.
-- [ ] `GET /api/assignments/:id/equipment-status` returns 403 for a different instructor's assignment.
-- [ ] `npm run test:server` passes green.
+- [x] `checkReadiness()` sets `equipmentStatus = "ready"` and enqueues confirmation email when stub returns complete inventory.
+- [x] `checkReadiness()` sets `equipmentStatus = "pending_checkout"` and enqueues prompt email when stub returns partial inventory.
+- [x] `checkReadiness()` sets `equipmentStatus = "unknown"` (no email) when `inventoryUserId` is null.
+- [x] `checkReadiness()` sets `equipmentStatus = "unknown"` (no email) when inventory client throws.
+- [x] `InstructorService.acceptAssignment()` triggers the check asynchronously; errors do not propagate to caller.
+- [x] `GET /api/assignments/:id/equipment-status` returns correct shape for all three statuses.
+- [x] `GET /api/assignments/:id/equipment-status` returns 403 for a different instructor's assignment.
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
