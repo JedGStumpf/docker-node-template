@@ -1,7 +1,7 @@
 ---
 id: "005"
 title: "equipment-readiness-check daily scheduled job"
-status: todo
+status: done
 use-cases:
   - SUC-006
 depends-on:
@@ -36,12 +36,12 @@ Register a new daily scheduled job `equipment-readiness-check` in the existing `
 
 ## Acceptance Criteria
 
-- [ ] Job is registered with frequency = daily in `SchedulerService`.
-- [ ] `equipmentReadinessCheck()` transitions `pending_checkout` assignments to `ready` when stub returns complete inventory.
-- [ ] `equipmentReadinessCheck()` increments `equipmentReminderCount` and enqueues reminder email when inventory is still incomplete.
-- [ ] Cancelled assignments are not processed.
-- [ ] Assignments with null `inventoryUserId` are skipped (logged, not errored).
-- [ ] `npm run test:server` passes green.
+- [x] Job is registered with frequency = daily in `SchedulerService`.
+- [x] `equipmentReadinessCheck()` transitions `pending_checkout` assignments to `ready` when stub returns complete inventory.
+- [x] `equipmentReadinessCheck()` increments `equipmentReminderCount` and enqueues reminder email when inventory is still incomplete.
+- [x] Cancelled assignments are not processed.
+- [x] Assignments with null `inventoryUserId` are skipped (logged, not errored).
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
