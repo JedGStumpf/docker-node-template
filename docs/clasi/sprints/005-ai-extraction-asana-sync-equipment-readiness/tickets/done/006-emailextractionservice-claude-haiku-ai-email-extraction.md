@@ -1,7 +1,7 @@
 ---
 id: "006"
 title: "EmailExtractionService: Claude Haiku AI email extraction"
-status: todo
+status: done
 use-cases:
   - SUC-001
   - SUC-002
@@ -47,13 +47,13 @@ Implement `EmailExtractionService` at `server/src/services/email-extraction.serv
 
 ## Acceptance Criteria
 
-- [ ] `extractFromEmail()` stores an `EmailExtraction` record when `ANTHROPIC_API_KEY` is set (mock in tests).
-- [ ] `extractFromEmail()` returns null gracefully when `ANTHROPIC_API_KEY` is not set.
-- [ ] Admin request detail API includes the latest extraction.
-- [ ] `POST /api/admin/requests/:id/apply-extraction/:extractionId` transitions request status and sets `appliedAt`.
-- [ ] Apply-extraction endpoint returns 403 for non-admin callers.
-- [ ] Extraction failure (API error, JSON parse error) does not affect email storage.
-- [ ] `npm run test:server` passes green.
+- [x] `extractFromEmail()` stores an `EmailExtraction` record when `ANTHROPIC_API_KEY` is set (mock in tests).
+- [x] `extractFromEmail()` returns null gracefully when `ANTHROPIC_API_KEY` is not set.
+- [x] Admin request detail API includes the latest extraction.
+- [x] `POST /api/admin/requests/:id/apply-extraction/:extractionId` transitions request status and sets `appliedAt`.
+- [x] Apply-extraction endpoint returns 403 for non-admin callers.
+- [x] Extraction failure (API error, JSON parse error) does not affect email storage.
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
