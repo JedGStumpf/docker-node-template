@@ -1,5 +1,6 @@
 ---
-status: pending
+status: done
+sprint: '004'
 ---
 
 # Outbound Email Queue with Retry
