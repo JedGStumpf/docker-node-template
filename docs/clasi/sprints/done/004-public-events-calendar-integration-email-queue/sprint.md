@@ -1,7 +1,7 @@
 ---
-id: "004"
-title: "Public Events, Calendar Integration & Email Queue"
-status: planning
+id: '004'
+title: Public Events, Calendar Integration & Email Queue
+status: done
 branch: sprint/004-public-events-calendar-integration-email-queue
 use-cases:
 - SUC-001
