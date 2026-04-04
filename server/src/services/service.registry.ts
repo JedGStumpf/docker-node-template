@@ -38,6 +38,7 @@ import {
   MockAnthropicClient,
 } from './email-extraction.service';
 import { AsanaWebhookService } from './asana-webhook.service';
+import { AnalyticsService } from './analytics.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -72,6 +73,7 @@ export class ServiceRegistry {
   readonly equipment: EquipmentService;
   readonly emailExtraction: EmailExtractionService;
   readonly asanaWebhook: AsanaWebhookService;
+  readonly analytics: AnalyticsService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -140,6 +142,7 @@ export class ServiceRegistry {
           : null;
     this.emailExtraction = new EmailExtractionService(defaultPrisma, anthropicClient);
     this.asanaWebhook = new AsanaWebhookService(defaultPrisma);
+    this.analytics = new AnalyticsService(defaultPrisma);
 
     // Wire equipment service into instructor service (avoiding circular constructor dependency)
     this.instructors.setEquipmentService(this.equipment);

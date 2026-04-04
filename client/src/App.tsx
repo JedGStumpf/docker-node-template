@@ -25,6 +25,7 @@ import ImportExport from './pages/admin/ImportExport';
 import UsersPanel from './pages/admin/UsersPanel';
 import EventPage from './pages/EventPage';
 import EmailQueueAdmin from './pages/admin/EmailQueueAdmin';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import InstructorDashboard from './pages/InstructorDashboard';
 
 function App() {
@@ -66,6 +67,7 @@ function App() {
               <Route path="/admin/requests" element={<AdminRequests />} />
               <Route path="/admin/requests/:id" element={<AdminRequestDetail />} />
               <Route path="/admin/email-queue" element={<EmailQueueAdmin />} />
+              <Route path="/admin/analytics" element={<AnalyticsDashboard />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
