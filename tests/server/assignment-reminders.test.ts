@@ -211,7 +211,7 @@ describe('Ticket 007: Instructor timeout & assignedInstructorId', () => {
 
       // Admin should have been notified about no more candidates
       const adminEmails = transport.sent.filter(
-        (m: any) => m.subject && /no.*match|new.*request/i.test(m.subject),
+        (m: any) => m.subject && /no.*match|new.*request|no instructor/i.test(m.subject),
       );
       expect(adminEmails.length).toBeGreaterThanOrEqual(1);
     });

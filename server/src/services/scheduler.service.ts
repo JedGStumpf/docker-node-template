@@ -120,6 +120,7 @@ export class SchedulerService {
       { name: 'deadline-check', frequency: 'hourly' },
       { name: 'email-sender', frequency: 'hourly' },
       { name: 'meetup-rsvp-sync', frequency: 'daily' },
+      { name: 'equipment-readiness-check', frequency: 'daily' },
     ];
     for (const def of defaults) {
       await this.prisma.scheduledJob.upsert({

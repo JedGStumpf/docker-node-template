@@ -30,6 +30,15 @@ import { MeetupService } from './meetup.service';
 import { MockMeetupClient, RealMeetupClient, type IMeetupClient } from './meetup.client';
 import { GoogleCalendarService } from './google-calendar.service';
 import { MockGoogleCalendarClient, RealGoogleCalendarClient, type IGoogleCalendarClient } from './google-calendar.client';
+import { StubInventoryClient, type IInventoryClient } from './inventory';
+import { EquipmentService } from './equipment.service';
+import {
+  EmailExtractionService,
+  RealAnthropicClient,
+  MockAnthropicClient,
+} from './email-extraction.service';
+import { AsanaWebhookService } from './asana-webhook.service';
+import { AnalyticsService } from './analytics.service';
 
 export class ServiceRegistry {
   readonly source: ServiceSource;
@@ -58,6 +67,13 @@ export class ServiceRegistry {
   readonly meetup: MeetupService;
   readonly googleCalendarClient: IGoogleCalendarClient;
   readonly googleCalendar: GoogleCalendarService;
+
+  // Sprint 5 services
+  readonly inventoryClient: IInventoryClient;
+  readonly equipment: EquipmentService;
+  readonly emailExtraction: EmailExtractionService;
+  readonly asanaWebhook: AsanaWebhookService;
+  readonly analytics: AnalyticsService;
 
   private constructor(source: ServiceSource = 'UI') {
     this.source = source;
@@ -94,9 +110,9 @@ export class ServiceRegistry {
     this.sites = new SiteService(defaultPrisma);
 
     if (process.env.NODE_ENV === 'production') {
-      this.asana = new AsanaService(new RealAsanaClient());
+      this.asana = new AsanaService(new RealAsanaClient(), defaultPrisma);
     } else {
-      this.asana = new AsanaService(new MockAsanaClient());
+      this.asana = new AsanaService(new MockAsanaClient(), defaultPrisma);
     }
 
     this.registration = new RegistrationService(defaultPrisma);
@@ -112,6 +128,24 @@ export class ServiceRegistry {
 
     this.meetup = new MeetupService(defaultPrisma, this.meetupClient, this.content);
     this.googleCalendar = new GoogleCalendarService(defaultPrisma, this.googleCalendarClient);
+
+    // Sprint 5: Inventory client — always stub in Sprint 5 (real HTTP client is a follow-on task)
+    this.inventoryClient = new StubInventoryClient();
+    this.equipment = new EquipmentService(defaultPrisma, this.inventoryClient, this.content, this.email);
+
+    // Email extraction service — uses mock in test, real client in production (if API key set)
+    const anthropicClient =
+      process.env.NODE_ENV === 'test'
+        ? new MockAnthropicClient()
+        : process.env.ANTHROPIC_API_KEY
+          ? new RealAnthropicClient()
+          : null;
+    this.emailExtraction = new EmailExtractionService(defaultPrisma, anthropicClient);
+    this.asanaWebhook = new AsanaWebhookService(defaultPrisma);
+    this.analytics = new AnalyticsService(defaultPrisma);
+
+    // Wire equipment service into instructor service (avoiding circular constructor dependency)
+    this.instructors.setEquipmentService(this.equipment);
 
     this.requests = new RequestService(defaultPrisma, {
       meetupService: this.meetup,
@@ -151,6 +185,7 @@ export class ServiceRegistry {
     await p.roleAssignmentPattern.deleteMany();
     // Sprint 1 models (FK-safe order)
     try {
+      await p.emailExtraction.deleteMany();
       await p.emailQueue.deleteMany();
       await p.registration.deleteMany();
       await p.siteRepSession.deleteMany();

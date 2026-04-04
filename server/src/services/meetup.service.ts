@@ -26,18 +26,34 @@ export class MeetupService {
     // Build description from class details
     const classInfo = await this.contentService.getClassBySlug(request.classSlug);
     const title = classInfo?.title || request.classSlug;
-    
+
+    // Check for group-specific mapping (fallback logging)
+    const groupMapping = await this.getGroupMapping(request.classSlug);
+    let resolvedGroupUrlname = groupUrlname;
+    if (!groupMapping) {
+      // Log structured fallback warning
+      console.warn(JSON.stringify({
+        level: 'warn',
+        event: 'meetup_group_mapping_fallback',
+        classSlug: request.classSlug,
+        fallback: groupUrlname,
+        requestId: request.id,
+      }));
+    } else {
+      resolvedGroupUrlname = groupMapping;
+    }
+
     let description = '';
-    
+
     // Put external registration link prominently at top if present
     if (request.externalRegistrationUrl) {
       description += `🔗 **Register here:** ${request.externalRegistrationUrl}\n\n`;
     }
-    
+
     if (classInfo?.description) {
       description += classInfo.description + '\n\n';
     }
-    
+
     description += `Hosted by: ${request.requesterName}\n`;
     if (request.locationFreeText) {
       description += `Location: ${request.locationFreeText}\n`;
@@ -46,15 +62,36 @@ export class MeetupService {
       description += `Ages: ${classInfo.ageRange}\n`;
     }
 
+    // Note if using fallback group
+    if (!groupMapping) {
+      description += `\n[Group: ${resolvedGroupUrlname}]`;
+    }
+
     const result = await this.meetupClient.createEvent({
       title,
       description,
       date: request.confirmedDate || new Date(),
       location: request.locationFreeText,
-      groupUrlname,
+      groupUrlname: resolvedGroupUrlname,
     });
 
     return { meetupEventId: result.eventId, meetupEventUrl: result.eventUrl };
+  }
+
+  /**
+   * Look up the Meetup group URL name for a given class slug.
+   * Returns the mapped group urlname, or null if no mapping exists.
+   * Override in subclasses or via MEETUP_GROUP_MAPPING env var (JSON object).
+   */
+  async getGroupMapping(classSlug: string): Promise<string | null> {
+    const mappingJson = process.env.MEETUP_GROUP_MAPPING;
+    if (!mappingJson) return null;
+    try {
+      const mapping = JSON.parse(mappingJson) as Record<string, string>;
+      return mapping[classSlug] || null;
+    } catch {
+      return null;
+    }
   }
 
   /**

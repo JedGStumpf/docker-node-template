@@ -13,6 +13,7 @@ import { adminBackupsRouter } from './backups';
 import { adminRequestsRouter } from './requests';
 import { adminSitesRouter } from './sites';
 import { adminEmailQueueRouter } from './email-queue';
+import { adminAnalyticsRouter } from './analytics';
 
 export const adminRouter = Router();
 
@@ -38,3 +39,4 @@ adminRouter.use('/admin', adminSchedulerRouter);
 adminRouter.use('/admin', adminBackupsRouter);
 adminRouter.use('/admin', adminSitesRouter);
 adminRouter.use('/admin', adminEmailQueueRouter);
+adminRouter.use('/admin', adminAnalyticsRouter);

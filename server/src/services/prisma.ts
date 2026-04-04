@@ -12,6 +12,7 @@ const SQLITE_ARRAY_FIELDS: Record<string, string[]> = {
   InstructorProfile: ['topics', 'serviceZips'],
   EventRequest: ['preferredDates', 'proposedDates'],
   Registration: ['availableDates'],
+  EmailExtraction: ['actionItems'],
 };
 
 /**
@@ -161,6 +162,30 @@ async function getPrismaClient() {
             async findMany({ args, query }: any) {
               const results = await query(args);
               return decodeResult('Registration', results);
+            },
+          },
+          emailExtraction: {
+            async create({ args, query }: any) {
+              if (args.data) args.data = encodeArrayFields('EmailExtraction', args.data);
+              const result = await query(args);
+              return decodeArrayFields('EmailExtraction', result);
+            },
+            async update({ args, query }: any) {
+              if (args.data) args.data = encodeArrayFields('EmailExtraction', args.data);
+              const result = await query(args);
+              return decodeArrayFields('EmailExtraction', result);
+            },
+            async findUnique({ args, query }: any) {
+              const result = await query(args);
+              return decodeArrayFields('EmailExtraction', result);
+            },
+            async findFirst({ args, query }: any) {
+              const result = await query(args);
+              return decodeArrayFields('EmailExtraction', result);
+            },
+            async findMany({ args, query }: any) {
+              const results = await query(args);
+              return decodeResult('EmailExtraction', results);
             },
           },
         },
