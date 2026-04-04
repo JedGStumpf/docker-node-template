@@ -85,6 +85,86 @@ instructorRouter.post('/instructor/assignments/:id/accept', async (req: Request,
   }
 });
 
+/** GET /api/instructor/events — instructor's upcoming and past assignments */
+instructorRouter.get('/instructor/events', requireInstructor, async (req: Request, res: Response) => {
+  try {
+    const pike13UserId = (req.session as any).pike13UserId as string;
+    const instructor = await req.services.prisma.instructorProfile.findUnique({
+      where: { pike13UserId },
+    });
+    if (!instructor) {
+      return res.status(404).json({ error: 'Instructor profile not found' });
+    }
+
+    const now = new Date();
+    const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 3600 * 1000);
+
+    const assignments = await req.services.prisma.instructorAssignment.findMany({
+      where: {
+        instructorId: instructor.id,
+        status: { in: ['accepted', 'pending'] },
+      },
+      include: {
+        request: {
+          select: {
+            id: true,
+            classSlug: true,
+            confirmedDate: true,
+            locationFreeText: true,
+            status: true,
+            zipCode: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const upcoming = assignments
+      .filter((a: any) => {
+        const date = a.request.confirmedDate ? new Date(a.request.confirmedDate) : null;
+        return date && date >= now;
+      })
+      .sort((a: any, b: any) => {
+        const da = new Date(a.request.confirmedDate).getTime();
+        const db = new Date(b.request.confirmedDate).getTime();
+        return da - db;
+      });
+
+    const past = assignments
+      .filter((a: any) => {
+        const date = a.request.confirmedDate ? new Date(a.request.confirmedDate) : null;
+        return date && date < now && date >= twelveMonthsAgo;
+      })
+      .sort((a: any, b: any) => {
+        const da = new Date(a.request.confirmedDate).getTime();
+        const db = new Date(b.request.confirmedDate).getTime();
+        return db - da;
+      });
+
+    const mapAssignment = (a: any) => ({
+      id: a.id,
+      requestId: a.request.id,
+      classSlug: a.request.classSlug,
+      confirmedDate: a.request.confirmedDate,
+      location: a.request.locationFreeText || a.request.zipCode,
+      requestStatus: a.request.status,
+      assignmentStatus: a.status,
+      equipmentStatus: a.equipmentStatus,
+      equipmentCheckedAt: a.equipmentCheckedAt,
+    });
+
+    res.json({
+      upcoming: upcoming.map(mapAssignment),
+      past: past.map(mapAssignment),
+    });
+  } catch (err: any) {
+    if (err instanceof ServiceError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 /** GET /api/assignments/:id/equipment-status */
 instructorRouter.get('/assignments/:id/equipment-status', requireInstructor, async (req: Request, res: Response) => {
   try {

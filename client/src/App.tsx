@@ -25,6 +25,7 @@ import ImportExport from './pages/admin/ImportExport';
 import UsersPanel from './pages/admin/UsersPanel';
 import EventPage from './pages/EventPage';
 import EmailQueueAdmin from './pages/admin/EmailQueueAdmin';
+import InstructorDashboard from './pages/InstructorDashboard';
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
             <Route path="/account" element={<Account />} />
             <Route path="/request" element={<RequestIntake />} />
             <Route path="/mcp-setup" element={<McpSetup />} />
+            <Route path="/instructor/events" element={<InstructorDashboard />} />
 
             {/* Admin pages — auth-gated by AdminLayout */}
             <Route element={<AdminLayout />}>
