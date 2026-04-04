@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // Runtime configuration store for admin-managed credentials.
@@ -93,9 +93,9 @@ model ScheduledJob {
 
 // Express session store (PrismaSessionStore).
 model Session {
-  sid    String   @id @db.VarChar(255)
+  sid    String   @id 
   sess   Json
-  expire DateTime @db.Timestamptz(6)
+  expire DateTime 
 
   @@index([expire])
   @@map("session")
@@ -103,33 +103,17 @@ model Session {
 
 // ── Sprint 1: Request Intake & Instructor Matching ──────────────────────────
 
-enum RequestStatus {
-  unverified
-  new
-  discussing
-  dates_proposed
-  confirmed
-  completed
-  cancelled
-  no_instructor
-}
 
-enum AssignmentStatus {
-  pending
-  accepted
-  declined
-  timed_out
-}
 
 model InstructorProfile {
   id               Int       @id @default(autoincrement())
   pike13UserId     String    @unique
   displayName      String
   email            String
-  topics           String[]
+  topics           String @default("")
   homeZip          String
   maxTravelMinutes Int       @default(60)
-  serviceZips      String[]  @default([])
+  serviceZips      String @default("")
   active           Boolean   @default(true)
   inventoryUserId  String?
   createdAt        DateTime  @default(now())
@@ -148,14 +132,14 @@ model EventRequest {
   expectedHeadcount       Int
   zipCode                 String
   locationFreeText        String?
-  preferredDates          String[]
+  preferredDates          String @default("")
   externalRegistrationUrl String?
   siteControl             String?
   siteReadiness           String?
   marketingCapability     String?
   verificationToken       String         @unique
   verificationExpiresAt   DateTime
-  status                  RequestStatus  @default(unverified)
+  status                  String @default("unverified")
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
 
@@ -173,7 +157,7 @@ model EventRequest {
   votingDeadline          DateTime?
   confirmedDate           DateTime?
   registrationToken       String?        @unique
-  proposedDates           String[]       @default([])
+  proposedDates           String @default("")
   assignedInstructorId    Int?
 
   assignedInstructor      InstructorProfile? @relation("AssignedInstructor", fields: [assignedInstructorId], references: [id])
@@ -196,7 +180,7 @@ model InstructorAssignment {
   id                      String           @id @default(uuid())
   requestId               String
   instructorId            Int
-  status                  AssignmentStatus @default(pending)
+  status                  String @default("pending")
   notificationToken       String           @unique
   notifiedAt              DateTime?
   respondedAt             DateTime?
@@ -279,7 +263,7 @@ model Registration {
   attendeeName    String
   attendeeEmail   String
   numberOfKids    Int
-  availableDates  String[]   @default([])
+  availableDates  String @default("")
   status          String     @default("interested")
   createdAt       DateTime   @default(now())
 
@@ -295,7 +279,7 @@ model EmailExtraction {
   emailId               String
   requestId             String
   statusSignal          String?
-  actionItems           String[]
+  actionItems           String @default("")
   hostRegistrationCount Int?
   appliedAt             DateTime?
   createdAt             DateTime  @default(now())

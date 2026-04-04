@@ -217,6 +217,19 @@ adminRequestsRouter.put('/requests/:id', requirePike13Admin, async (req: Request
       }
     }
 
+    // giveLivelyUrl (optional HTTPS URL or null to clear)
+    if (req.body?.giveLivelyUrl !== undefined) {
+      if (req.body.giveLivelyUrl === null || req.body.giveLivelyUrl === '') {
+        updateData.giveLivelyUrl = null;
+      } else {
+        const url = String(req.body.giveLivelyUrl).trim();
+        if (!url.startsWith('https://')) {
+          return res.status(400).json({ error: 'giveLivelyUrl must start with https://' });
+        }
+        updateData.giveLivelyUrl = url;
+      }
+    }
+
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: 'No valid fields to update' });
     }
@@ -259,6 +272,122 @@ adminRequestsRouter.post(
     }
   },
 );
+
+/** POST /api/admin/requests/:id/reopen-matching — Re-open instructor matching for no_instructor requests */
+adminRequestsRouter.post('/requests/:id/reopen-matching', requirePike13Admin, async (req: Request, res: Response) => {
+  try {
+    const prisma = req.services.prisma;
+    const requestRecord = await prisma.eventRequest.findUnique({ where: { id: req.params.id } });
+    if (!requestRecord) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    if (requestRecord.status !== 'no_instructor') {
+      return res.status(422).json({ error: 'Request must be in no_instructor status to reopen matching' });
+    }
+
+    // Reset status to discussing
+    const updated = await prisma.eventRequest.update({
+      where: { id: req.params.id },
+      data: { status: 'discussing' },
+    });
+
+    // Re-run instructor matching
+    try {
+      const { candidates } = await req.services.matching.findMatchingInstructors({
+        zip: requestRecord.zipCode,
+        classSlug: requestRecord.classSlug,
+        excludeInstructorIds: [],
+      });
+      if (candidates && candidates.length > 0) {
+        const notificationToken = crypto.randomUUID();
+        const assignmentTimeoutHours = Number(process.env.ASSIGNMENT_TIMEOUT_HOURS) || 48;
+        const newAssignment = await prisma.instructorAssignment.create({
+          data: {
+            requestId: requestRecord.id,
+            instructorId: candidates[0].instructorId,
+            status: 'pending',
+            notificationToken,
+            notifiedAt: new Date(),
+            timeoutAt: new Date(Date.now() + assignmentTimeoutHours * 3600_000),
+          },
+        });
+        const instructor = await prisma.instructorProfile.findUnique({
+          where: { id: candidates[0].instructorId },
+        });
+        if (instructor) {
+          await req.services.email.sendMatchNotification({
+            to: instructor.email,
+            assignmentId: newAssignment.id,
+            notificationToken,
+            requestId: requestRecord.id,
+            classTitle: requestRecord.classSlug,
+            requesterName: requestRecord.requesterName,
+            zipCode: requestRecord.zipCode,
+            preferredDates: Array.isArray(requestRecord.preferredDates) ? requestRecord.preferredDates : [],
+            replyTo: requestRecord.emailThreadAddress || undefined,
+          });
+        }
+      }
+    } catch {
+      // Don't fail the status reset if re-matching fails
+    }
+
+    return res.json(updated);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to reopen matching', detail: err.message });
+  }
+});
+
+/** POST /api/admin/requests/:id/registrations — Admin manually adds a registration */
+adminRequestsRouter.post('/requests/:id/registrations', requirePike13Admin, async (req: Request, res: Response) => {
+  try {
+    const prisma = req.services.prisma;
+    const requestRecord = await prisma.eventRequest.findUnique({ where: { id: req.params.id } });
+    if (!requestRecord) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    const { attendeeName, attendeeEmail, numberOfKids } = req.body || {};
+    if (!attendeeName || !attendeeEmail || numberOfKids == null) {
+      return res.status(400).json({ error: 'attendeeName, attendeeEmail, and numberOfKids are required' });
+    }
+    if (!Number.isInteger(Number(numberOfKids)) || Number(numberOfKids) < 1) {
+      return res.status(400).json({ error: 'numberOfKids must be a positive integer' });
+    }
+
+    // Determine registration status
+    let registrationStatus = 'interested';
+    if (requestRecord.status === 'confirmed') {
+      registrationStatus = 'confirmed';
+      if (requestRecord.eventCapacity != null) {
+        const confirmedCount = await prisma.registration.count({
+          where: { requestId: req.params.id, status: 'confirmed' },
+        });
+        if (confirmedCount >= requestRecord.eventCapacity) {
+          registrationStatus = 'waitlisted';
+        }
+      }
+    }
+
+    const registration = await prisma.registration.create({
+      data: {
+        requestId: req.params.id,
+        attendeeName: String(attendeeName),
+        attendeeEmail: String(attendeeEmail),
+        numberOfKids: Number(numberOfKids),
+        availableDates: [],
+        status: registrationStatus,
+      },
+    });
+
+    return res.status(201).json(registration);
+  } catch (err: any) {
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'A registration with this email already exists' });
+    }
+    return res.status(500).json({ error: 'Failed to create registration', detail: err.message });
+  }
+});
 
 /** POST /api/admin/requests/:id/finalize-date — Manually finalize a date */
 adminRequestsRouter.post('/requests/:id/finalize-date', requirePike13Admin, async (req: Request, res: Response) => {

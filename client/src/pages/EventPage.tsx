@@ -14,6 +14,7 @@ interface EventInfo {
   votingDeadline: string | null;
   voteTallies: Record<string, number>;
   registrationCount: number;
+  giveLivelyUrl: string | null;
 }
 
 type PageState = 'loading' | 'loaded' | 'registered' | 'error';
@@ -100,6 +101,15 @@ export default function EventPage() {
       {event.status === 'confirmed' && event.confirmedDate && (
         <div style={styles.confirmedBox}>
           <strong>Date confirmed:</strong> {formatDate(event.confirmedDate.slice(0, 10))}
+        </div>
+      )}
+
+      {event.giveLivelyUrl && (
+        <div style={styles.donationBox}>
+          <strong>Support this event:</strong>{' '}
+          <a href={event.giveLivelyUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8' }}>
+            Donate via Give Lively
+          </a>
         </div>
       )}
 
@@ -204,5 +214,12 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #fecaca',
     borderRadius: 8,
     color: '#991b1b',
+  },
+  donationBox: {
+    padding: '0.75rem 1.5rem',
+    background: '#fefce8',
+    border: '1px solid #fde68a',
+    borderRadius: 8,
+    marginBottom: '1.5rem',
   },
 };

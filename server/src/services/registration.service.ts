@@ -234,6 +234,7 @@ export class RegistrationService {
       votingDeadline: request.votingDeadline,
       voteTallies: tallies,
       registrationCount: registrations.length,
+      giveLivelyUrl: request.giveLivelyUrl || null,
     };
   }
 

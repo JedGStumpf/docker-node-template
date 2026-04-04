@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-type StatusTab = 'all' | 'new' | 'discussing' | 'dates_proposed' | 'confirmed' | 'completed' | 'cancelled';
+type StatusTab = 'all' | 'new' | 'discussing' | 'dates_proposed' | 'confirmed' | 'completed' | 'cancelled' | 'no_instructor';
 
 interface RequestRow {
   id: string;
@@ -62,7 +62,7 @@ export default function AdminRequests() {
       <h1 style={{ margin: 0 }}>Admin Requests</h1>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {(['all', 'new', 'discussing', 'dates_proposed', 'confirmed', 'completed', 'cancelled'] as StatusTab[]).map((tab) => (
+        {(['all', 'new', 'discussing', 'dates_proposed', 'confirmed', 'completed', 'cancelled', 'no_instructor'] as StatusTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => {
@@ -114,7 +114,7 @@ export default function AdminRequests() {
               >
                 <td style={td}>{r.requesterName}<br /><small>{r.requesterEmail}</small></td>
                 <td style={td}>{r.classSlug}</td>
-                <td style={td}>{r.status}</td>
+                <td style={td}><StatusBadge status={r.status} /></td>
                 <td style={td}>{r.emailThreadAddress || 'N/A'}</td>
                 <td style={td}>{r.asanaTaskId || 'N/A'}</td>
               </tr>
@@ -151,6 +151,35 @@ function tabLabel(tab: string): string {
     confirmed: 'Confirmed',
     completed: 'Completed',
     cancelled: 'Cancelled',
+    no_instructor: 'No Instructor',
   };
   return labels[tab] || tab;
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, React.CSSProperties> = {
+    no_instructor: {
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 12,
+      fontSize: '0.8rem',
+      background: '#fef9c3',
+      color: '#854d0e',
+      border: '1px solid #fde047',
+      fontWeight: 600,
+    },
+    default: {
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 12,
+      fontSize: '0.8rem',
+      background: '#f1f5f9',
+      color: '#374151',
+    },
+  };
+  return (
+    <span style={status === 'no_instructor' ? styles.no_instructor : styles.default}>
+      {status === 'no_instructor' ? 'No Instructor' : status}
+    </span>
+  );
 }

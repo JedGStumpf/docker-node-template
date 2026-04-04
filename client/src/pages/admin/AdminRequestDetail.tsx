@@ -41,6 +41,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   confirmed: ['completed', 'cancelled'],
   completed: [],
   cancelled: [],
+  no_instructor: [],
 };
 
 export default function AdminRequestDetail() {
@@ -152,6 +153,23 @@ export default function AdminRequestDetail() {
     const updated = await res.json();
     setRequestDetail(updated);
     setMessage('Configuration saved');
+  }
+
+  async function reopenMatching() {
+    if (!id) return;
+    setMessage('');
+    const res = await fetch(`/api/admin/requests/${id}/reopen-matching`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data.error || 'Failed to reopen matching');
+      return;
+    }
+    const updated = await res.json();
+    setRequestDetail(updated);
+    setMessage('Matching reopened — instructors will be re-notified');
   }
 
   async function finalizeDate(date: string) {
@@ -386,6 +404,25 @@ export default function AdminRequestDetail() {
             </table>
           ) : (
             <p>No registrations yet.</p>
+          )}
+
+          {/* No instructor warning + reopen action */}
+          {requestDetail.status === 'no_instructor' && (
+            <div style={{
+              padding: '1rem',
+              background: '#fef9c3',
+              border: '1px solid #fde047',
+              borderRadius: 8,
+              marginTop: 12,
+            }}>
+              <strong style={{ color: '#854d0e' }}>No instructor available</strong>
+              <p style={{ margin: '8px 0', color: '#713f12' }}>
+                All instructors declined or timed out. You can reopen matching to try again.
+              </p>
+              <button onClick={reopenMatching} style={btnStyle} data-testid="reopen-matching">
+                Re-open Matching
+              </button>
+            </div>
           )}
 
           {/* Manual finalize buttons */}

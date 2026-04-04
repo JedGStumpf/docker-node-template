@@ -422,6 +422,33 @@ export class EmailService {
     });
   }
 
+  async sendNoInstructorAlertEmail(opts: {
+    requestId: string;
+    classTitle: string;
+    requesterName: string;
+    replyTo?: string;
+  }): Promise<void> {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@jointheleague.org';
+    const base = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const detailUrl = `${base}/admin/requests/${opts.requestId}`;
+    await this.dispatch({
+      to: adminEmail,
+      subject: `No instructor available — ${opts.classTitle}`,
+      text: [
+        `All instructors have declined or timed out for request ${opts.requestId}.`,
+        '',
+        `Class: ${opts.classTitle}`,
+        `Requester: ${opts.requesterName}`,
+        '',
+        `View request: ${detailUrl}`,
+        '',
+        'Use the "Re-open matching" action in the admin dashboard to try again.',
+      ].join('\n'),
+      html: `<p>All instructors have declined or timed out for request <strong>${opts.requestId}</strong>.</p><ul><li>Class: ${opts.classTitle}</li><li>Requester: ${opts.requesterName}</li></ul><p><a href="${detailUrl}">View request</a></p><p>Use the "Re-open matching" action in the admin dashboard to try again.</p>`,
+      replyTo: opts.replyTo,
+    });
+  }
+
   async sendRegistrationDigest(
     replyTo: string,
     threadAddress: string,

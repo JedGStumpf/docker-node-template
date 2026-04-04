@@ -208,12 +208,15 @@ export class InstructorService {
     });
 
     if (!candidates || candidates.length === 0) {
-      // No more candidates — notify admin
-      await emailService.sendAdminNewRequestNotification({
+      // No more candidates — transition to no_instructor and alert admin
+      await this.prisma.eventRequest.update({
+        where: { id: request.id },
+        data: { status: 'no_instructor' },
+      });
+      await emailService.sendNoInstructorAlertEmail({
         requestId: request.id,
         classTitle: request.classSlug,
         requesterName: request.requesterName,
-        noMatchAvailable: true,
         replyTo: request.emailThreadAddress || undefined,
       });
       return;
