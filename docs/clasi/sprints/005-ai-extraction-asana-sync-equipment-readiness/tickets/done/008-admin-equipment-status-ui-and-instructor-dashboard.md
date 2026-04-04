@@ -1,7 +1,7 @@
 ---
 id: "008"
 title: "Admin equipment status UI and instructor dashboard"
-status: todo
+status: done
 use-cases:
   - SUC-007
   - SUC-008
@@ -47,13 +47,13 @@ New React route at `/instructor/events`:
 
 ## Acceptance Criteria
 
-- [ ] Admin request detail shows equipment status badge for each assignment.
-- [ ] All three badge states (ready, pending_checkout, unknown) render with correct colors.
-- [ ] Override modal submits to the override API and refreshes the status.
-- [ ] `GET /api/instructor/events` returns upcoming and past assignments for the authenticated instructor.
-- [ ] `/instructor/events` page renders both sections and empty states.
-- [ ] `/instructor/events` redirects unauthenticated visitors to login.
-- [ ] `npm run test:server` and `npm run test:client` pass green.
+- [x] Admin request detail shows equipment status badge for each assignment.
+- [x] All three badge states (ready, pending_checkout, unknown) render with correct colors.
+- [x] Override modal submits to the override API and refreshes the status.
+- [x] `GET /api/instructor/events` returns upcoming and past assignments for the authenticated instructor.
+- [x] `/instructor/events` page renders both sections and empty states.
+- [x] `/instructor/events` redirects unauthenticated visitors to login.
+- [x] `npm run test:server` and `npm run test:client` pass green.
 
 ## Testing
 
