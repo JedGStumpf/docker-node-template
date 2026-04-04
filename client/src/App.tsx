@@ -27,6 +27,7 @@ import EventPage from './pages/EventPage';
 import EmailQueueAdmin from './pages/admin/EmailQueueAdmin';
 import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import InstructorDashboard from './pages/InstructorDashboard';
+import RequesterStatus from './pages/RequesterStatus';
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
 
           {/* Public event registration (no auth required) */}
           <Route path="/events/:requestId" element={<EventPage />} />
+          {/* Public requester status page (no auth required) */}
+          <Route path="/requests/:id" element={<RequesterStatus />} />
 
           {/* All authenticated routes share AppLayout (sidebar + topbar) */}
           <Route element={<AppLayout />}>

@@ -3,6 +3,7 @@
  *
  * GET  /api/requests/availability — check zip+topic coverage
  * POST /api/requests — submit a new event request
+ * GET  /api/requests/:id/status — public tokenized status view (sprint 006)
  * GET  /api/requests/:id — get request status
  * POST /api/requests/:id/verify — verify email token
  */
@@ -156,6 +157,54 @@ requestsRouter.post('/requests', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/requests/:id/status?token=
+ *
+ * Public tokenized status endpoint — no auth required.
+ * Token must match `registrationToken` on the EventRequest record.
+ * Returns a safe DTO without internal fields.
+ */
+requestsRouter.get('/requests/:id/status', async (req: Request, res: Response) => {
+  try {
+    const id = firstString(req.params.id);
+    const token = firstString(req.query.token);
+
+    if (!id) {
+      return res.status(400).json({ error: 'Invalid request id' });
+    }
+
+    const prisma = req.services.prisma;
+    const eventRequest = await prisma.eventRequest.findUnique({ where: { id } });
+
+    if (!eventRequest) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    // Token gate: must match registrationToken (NOT verificationToken)
+    if (!token || !eventRequest.registrationToken || token !== eventRequest.registrationToken) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const registrationCount = await prisma.registration.count({ where: { requestId: id } });
+
+    const publicEventUrl = eventRequest.status === 'confirmed'
+      ? `/events/${id}`
+      : null;
+
+    return res.json({
+      id: eventRequest.id,
+      status: eventRequest.status,
+      classSlug: eventRequest.classSlug,
+      classTitle: eventRequest.classSlug, // classTitle not stored separately; use slug as display
+      confirmedDate: eventRequest.confirmedDate ?? null,
+      registrationCount,
+      publicEventUrl,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 /** GET /api/requests/:id */
 requestsRouter.get('/requests/:id', async (req: Request, res: Response) => {
   try {
@@ -192,6 +241,11 @@ requestsRouter.post('/requests/:id/verify', async (req: Request, res: Response) 
       req.services.sites,
     );
 
+    // Redirect to requester status page if registrationToken is available.
+    // Falls back to JSON for old records without a registrationToken.
+    if (updated.registrationToken) {
+      return res.redirect(302, `/requests/${id}?token=${updated.registrationToken}`);
+    }
     res.json({ status: updated.status });
   } catch (err: any) {
     if (err instanceof ServiceError) {
