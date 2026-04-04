@@ -103,4 +103,33 @@ describe('AppLayout', () => {
     const mainEl = document.querySelector('main');
     expect(mainEl).toBeInTheDocument();
   });
+
+  it('shows Analytics nav link in admin sidebar', () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        email: 'admin@example.com',
+        displayName: 'Admin User',
+        role: 'ADMIN',
+        avatarUrl: null,
+        provider: null,
+        providerId: null,
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-01T00:00:00Z',
+      },
+      loading: false,
+      logout: mockLogout,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/admin/requests']}>
+        <AppLayout />
+      </MemoryRouter>,
+    );
+
+    // Admin sidebar should include Analytics (added in sprint 006)
+    expect(screen.getByText('Analytics')).toBeInTheDocument();
+    // Email Queue should also be present (pre-existing)
+    expect(screen.getByText('Email Queue')).toBeInTheDocument();
+  });
 });
