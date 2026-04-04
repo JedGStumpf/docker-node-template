@@ -1,7 +1,7 @@
 ---
 id: "009"
 title: "Admin analytics: event funnel and instructor utilization"
-status: todo
+status: done
 use-cases: []
 depends-on:
   - "001"
@@ -61,12 +61,12 @@ New page in the admin dashboard at `/admin/analytics`:
 
 ## Acceptance Criteria
 
-- [ ] `GET /api/admin/analytics` returns all three metric groups.
-- [ ] `GET /api/admin/analytics` returns 403 for non-admin callers.
-- [ ] Period filtering works (from/to query params).
-- [ ] Default period is last 90 days when no params provided.
-- [ ] Admin analytics page renders event funnel, utilization table, and registration summary.
-- [ ] `npm run test:server` and `npm run test:client` pass green.
+- [x] `GET /api/admin/analytics` returns all three metric groups.
+- [x] `GET /api/admin/analytics` returns 403 for non-admin callers.
+- [x] Period filtering works (from/to query params).
+- [x] Default period is last 90 days when no params provided.
+- [x] Admin analytics page renders event funnel, utilization table, and registration summary.
+- [x] `npm run test:server` and `npm run test:client` pass green.
 
 ## Testing
 

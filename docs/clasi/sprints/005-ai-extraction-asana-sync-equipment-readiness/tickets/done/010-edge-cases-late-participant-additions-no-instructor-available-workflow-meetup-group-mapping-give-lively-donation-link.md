@@ -1,7 +1,7 @@
 ---
 id: "010"
 title: "Edge cases: late participant additions, no-instructor-available workflow, Meetup group mapping, Give Lively donation link"
-status: todo
+status: done
 use-cases: []
 depends-on:
   - "001"
@@ -48,15 +48,15 @@ Add an optional per-event donation link (Give Lively URL) to `EventRequest`.
 
 ## Acceptance Criteria
 
-- [ ] Late registration on a confirmed event does not re-trigger date voting.
-- [ ] Late registration on a confirmed event at capacity is waitlisted correctly.
-- [ ] `EventRequest.status` transitions to `"no_instructor"` when all instructors decline/time out.
-- [ ] Admin receives an alert email when `"no_instructor"` status is set.
-- [ ] Admin UI shows `"no_instructor"` badge and "Re-open matching" action.
-- [ ] Meetup group mapping fallback logs a structured warning.
-- [ ] `giveLivelyUrl` is persisted and rendered in public event page and emails.
-- [ ] Invalid `giveLivelyUrl` (non-HTTPS URL) is rejected with 400.
-- [ ] `npm run test:server` passes green.
+- [x] Late registration on a confirmed event does not re-trigger date voting.
+- [x] Late registration on a confirmed event at capacity is waitlisted correctly.
+- [x] `EventRequest.status` transitions to `"no_instructor"` when all instructors decline/time out.
+- [x] Admin receives an alert email when `"no_instructor"` status is set.
+- [x] Admin UI shows `"no_instructor"` badge and "Re-open matching" action.
+- [x] Meetup group mapping fallback logs a structured warning.
+- [x] `giveLivelyUrl` is persisted and rendered in public event page and emails.
+- [x] Invalid `giveLivelyUrl` (non-HTTPS URL) is rejected with 400.
+- [x] `npm run test:server` passes green.
 
 ## Testing
 
