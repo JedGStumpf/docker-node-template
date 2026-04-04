@@ -1,13 +1,13 @@
 ---
-id: "006"
-title: "Dev experience: seed data, admin nav, requester status page"
-status: active
+id: '006'
+title: 'Dev experience: seed data, admin nav, requester status page'
+status: done
 branch: sprint/006-dev-experience-seed-admin-nav-requester-status
 use-cases:
-  - SUC-001
-  - SUC-002
-  - SUC-003
-  - SUC-004
+- SUC-001
+- SUC-002
+- SUC-003
+- SUC-004
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
