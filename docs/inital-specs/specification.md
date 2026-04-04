@@ -73,6 +73,8 @@ The system doesn't hold its own content — class descriptions, age ranges, and 
 
 - Integration with the League's inventory system to check and reserve equipment (robots, micro:bits, laptops, etc.) needed for a class
 - Equipment availability is a scheduling constraint — if the gear isn't free on a given date, that date isn't offered
+- After an instructor accepts an assignment, the system checks their personal inventory against class requirements and sends daily reminders until they check out any missing gear
+- See [FEAT-2 Instructor Equipment Readiness](FEAT-2%20Instructor%20Equipment%20Readiness.md) for the full instructor-side readiness workflow
 
 **Event Coordination**
 
