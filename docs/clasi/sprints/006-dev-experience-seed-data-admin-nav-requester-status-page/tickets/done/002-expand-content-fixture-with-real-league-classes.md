@@ -1,11 +1,11 @@
 ---
-id: "002"
-title: "Expand content fixture with real League classes"
-status: todo
+id: '002'
+title: Expand content fixture with real League classes
+status: in-progress
 use-cases: []
 depends-on: []
-github-issue: ""
-todo: ""
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
