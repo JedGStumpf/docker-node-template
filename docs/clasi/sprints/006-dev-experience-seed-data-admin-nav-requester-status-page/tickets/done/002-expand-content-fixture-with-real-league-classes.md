@@ -1,7 +1,7 @@
 ---
 id: '002'
 title: Expand content fixture with real League classes
-status: in-progress
+status: done
 use-cases: []
 depends-on: []
 github-issue: ''

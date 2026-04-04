@@ -1,7 +1,7 @@
 ---
 id: '003'
 title: "Admin sidebar navigation \u2014 add missing sprint 4-5 links"
-status: in-progress
+status: done
 use-cases: []
 depends-on: []
 github-issue: ''

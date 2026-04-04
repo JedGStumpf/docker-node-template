@@ -1,7 +1,7 @@
 ---
 id: '001'
 title: "Dev seed data \u2014 instructors, sites, admin user"
-status: in-progress
+status: done
 use-cases: []
 depends-on: []
 github-issue: ''

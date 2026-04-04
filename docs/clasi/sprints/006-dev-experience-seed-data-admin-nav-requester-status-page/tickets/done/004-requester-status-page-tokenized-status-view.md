@@ -1,7 +1,7 @@
 ---
 id: '004'
 title: "Requester status page \u2014 tokenized status view"
-status: in-progress
+status: done
 use-cases: []
 depends-on: []
 github-issue: ''
