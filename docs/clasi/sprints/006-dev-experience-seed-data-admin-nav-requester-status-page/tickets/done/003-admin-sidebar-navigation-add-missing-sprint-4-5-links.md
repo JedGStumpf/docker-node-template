@@ -1,11 +1,11 @@
 ---
-id: "003"
-title: "Admin sidebar navigation — add missing sprint 4-5 links"
-status: todo
+id: '003'
+title: "Admin sidebar navigation \u2014 add missing sprint 4-5 links"
+status: in-progress
 use-cases: []
 depends-on: []
-github-issue: ""
-todo: ""
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
