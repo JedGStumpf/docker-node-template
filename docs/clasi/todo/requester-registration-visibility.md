@@ -1,5 +1,6 @@
 ---
 status: pending
+sprint: '006'
 ---
 
 # Requester Registration Visibility

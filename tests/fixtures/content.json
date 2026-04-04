@@ -2,7 +2,7 @@
   {
     "slug": "python-intro",
     "title": "Introduction to Python",
-    "description": "A beginner-friendly introduction to Python programming.",
+    "description": "A beginner-friendly introduction to Python programming. Students learn variables, loops, and functions through hands-on projects.",
     "ageRange": "8-18",
     "topics": ["python", "programming"],
     "typicalDurationMinutes": 90,
@@ -12,17 +12,67 @@
   {
     "slug": "scratch-basics",
     "title": "Scratch Basics",
-    "description": "Introduction to programming with Scratch.",
+    "description": "Introduction to programming with Scratch, a visual block-based language. Great for first-time coders.",
     "ageRange": "6-12",
-    "topics": ["scratch", "programming", "visual"],
+    "topics": ["scratch", "programming"],
     "typicalDurationMinutes": 60,
+    "equipmentNeeded": ["laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "javascript-intro",
+    "title": "JavaScript Fundamentals",
+    "description": "Learn the language of the web. Students build interactive web pages using HTML, CSS, and JavaScript basics.",
+    "ageRange": "10-18",
+    "topics": ["javascript", "web-design", "programming"],
+    "typicalDurationMinutes": 90,
+    "equipmentNeeded": ["laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "game-design",
+    "title": "Game Design with Python",
+    "description": "Design and build your own video game using Python and Pygame. Covers sprites, collision detection, and game loops.",
+    "ageRange": "10-18",
+    "topics": ["game-design", "python", "programming"],
+    "typicalDurationMinutes": 120,
+    "equipmentNeeded": ["laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "robotics-intro",
+    "title": "Robotics Introduction",
+    "description": "Hands-on introduction to robotics. Students build and program robots to complete challenges using sensors and motors.",
+    "ageRange": "8-16",
+    "topics": ["robotics", "engineering"],
+    "typicalDurationMinutes": 90,
+    "equipmentNeeded": ["robot kit", "laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "web-design",
+    "title": "Web Design Fundamentals",
+    "description": "Build beautiful, responsive websites from scratch. Covers HTML structure, CSS styling, and basic layout techniques.",
+    "ageRange": "10-18",
+    "topics": ["web-design", "javascript", "programming"],
+    "typicalDurationMinutes": 90,
+    "equipmentNeeded": ["laptop"],
+    "requestable": true
+  },
+  {
+    "slug": "data-science-intro",
+    "title": "Introduction to Data Science",
+    "description": "Explore data through charts, statistics, and storytelling. Students use Python and real datasets to find patterns and insights.",
+    "ageRange": "12-18",
+    "topics": ["data-science", "python", "programming"],
+    "typicalDurationMinutes": 90,
     "equipmentNeeded": ["laptop"],
     "requestable": true
   },
   {
     "slug": "advanced-robotics",
     "title": "Advanced Robotics",
-    "description": "Advanced robotics for experienced students.",
+    "description": "Advanced robotics for experienced students. Covers autonomous navigation, computer vision, and multi-sensor fusion.",
     "ageRange": "14-18",
     "topics": ["robotics", "engineering"],
     "typicalDurationMinutes": 120,

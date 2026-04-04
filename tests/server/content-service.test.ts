@@ -17,7 +17,7 @@ describe('ContentService', () => {
       const service = new ContentService(FIXTURE_URL);
       const classes = await service.getRequestableClasses();
       expect(Array.isArray(classes)).toBe(true);
-      expect(classes.length).toBe(2); // Only python-intro and scratch-basics
+      expect(classes.length).toBe(7); // 7 requestable classes in fixture
       for (const cls of classes) {
         expect(cls.requestable).toBe(true);
       }
@@ -81,7 +81,7 @@ describe('ContentService', () => {
       const second = await service.getRequestableClasses(); // Should re-fetch
 
       // Data should still be correct
-      expect(second.length).toBe(2);
+      expect(second.length).toBe(7);
       // After re-fetch, new array is returned (different reference)
       // We can't easily verify re-fetch without mocking, but we verify data correctness
       expect(second.map((c) => c.slug)).toContain('python-intro');

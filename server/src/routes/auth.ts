@@ -240,8 +240,29 @@ authRouter.post('/auth/test-login', async (req: Request, res: Response) => {
         providerId: providerId || `test-${resolvedEmail}`,
       },
     });
+    // If logging in as ADMIN, also stamp a fake Pike13 admin session so the
+    // admin requests API (requirePike13Admin) passes in dev/test.
+    if (user.role === 'ADMIN') {
+      (req.session as any).pike13UserId = 'test-admin';
+      (req.session as any).pike13Role = 'admin';
+      (req.session as any).pike13DisplayName = user.displayName;
+      (req.session as any).pike13Email = user.email;
+    }
     req.login(user, (err) => {
       if (err) return res.status(500).json({ error: 'Login failed' });
+      // Set Pike13 admin session fields after passport login so they survive
+      // any session regeneration passport performs. Without these, requirePike13Admin
+      // blocks all admin requests API routes in dev/test.
+      if (user.role === 'ADMIN') {
+        req.session.pike13UserId = 'test-admin';
+        req.session.pike13Role = 'admin';
+        req.session.pike13DisplayName = user.displayName ?? undefined;
+        req.session.pike13Email = user.email;
+        return req.session.save((saveErr) => {
+          if (saveErr) return res.status(500).json({ error: 'Session save failed' });
+          res.json(user);
+        });
+      }
       res.json(user);
     });
   } catch (err) {
