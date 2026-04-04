@@ -35,6 +35,33 @@ export default function Login() {
     }
   }
 
+  async function handleRequesterLogin() {
+    setLoggingIn(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/auth/test-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'principal@testschool.org',
+          displayName: 'Principal Johnson',
+          role: 'USER',
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${res.status}`);
+      }
+      const user = await res.json();
+      login(user);
+      navigate('/', { replace: true });
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoggingIn(false);
+    }
+  }
+
   return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -67,6 +94,14 @@ export default function Login() {
           disabled={loggingIn}
         >
           {loggingIn ? 'Logging in...' : 'Dev Login (test mode)'}
+        </button>
+
+        <button
+          style={{ ...styles.devBtn, marginTop: '0.5rem', background: '#0891b2' }}
+          onClick={handleRequesterLogin}
+          disabled={loggingIn}
+        >
+          {loggingIn ? 'Logging in...' : 'Login as Test Requester'}
         </button>
 
         {error && <p style={styles.error}>{error}</p>}
