@@ -1,11 +1,11 @@
 ---
-id: "004"
-title: "Requester status page — tokenized status view"
-status: todo
+id: '004'
+title: "Requester status page \u2014 tokenized status view"
+status: in-progress
 use-cases: []
 depends-on: []
-github-issue: ""
-todo: ""
+github-issue: ''
+todo: ''
 ---
 <!-- CLASI: Before changing code or making plans, review the SE process in CLAUDE.md -->
 
