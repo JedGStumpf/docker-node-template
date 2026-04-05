@@ -20,6 +20,7 @@ export interface EmailMessage {
   html?: string;
   replyTo?: string;
   attachments?: EmailAttachment[];
+  requestId?: string;
 }
 
 export interface IEmailTransport {

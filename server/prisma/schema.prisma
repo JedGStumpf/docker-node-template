@@ -319,7 +319,9 @@ model EmailQueue {
   attempts    Int       @default(0)
   nextRetryAt DateTime?
   lastError   String?
+  requestId   String?
   createdAt   DateTime  @default(now())
 
   @@index([status, nextRetryAt])
+  @@index([requestId])
 }

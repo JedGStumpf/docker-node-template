@@ -32,6 +32,7 @@ export class EmailQueueService {
         status: 'pending',
         attempts: 0,
         nextRetryAt: null,
+        requestId: message.requestId || null,
       },
     });
   }
