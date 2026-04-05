@@ -429,6 +429,28 @@ adminRequestsRouter.post('/requests/:id/finalize-date', requirePike13Admin, asyn
   }
 });
 
+/** GET /api/admin/requests/:id/email-thread — Return unified thread view (sent + received) */
+adminRequestsRouter.get('/requests/:id/email-thread', requirePike13Admin, async (req: Request, res: Response) => {
+  try {
+    const prisma = req.services.prisma;
+    const { id } = req.params;
+
+    const requestRecord = await prisma.eventRequest.findUnique({ where: { id } });
+    if (!requestRecord) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    const [sent, received] = await Promise.all([
+      prisma.emailQueue.findMany({ where: { requestId: id }, orderBy: { createdAt: 'asc' } }),
+      prisma.emailExtraction.findMany({ where: { requestId: id }, orderBy: { createdAt: 'asc' } }),
+    ]);
+
+    return res.json({ sent, received });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch email thread', detail: err.message });
+  }
+});
+
 /** POST /api/admin/requests/:id/email-requester — Queue an outbound email to the requester */
 adminRequestsRouter.post('/requests/:id/email-requester', requirePike13Admin, async (req: Request, res: Response) => {
   try {
