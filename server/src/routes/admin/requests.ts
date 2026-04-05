@@ -428,3 +428,38 @@ adminRequestsRouter.post('/requests/:id/finalize-date', requirePike13Admin, asyn
     return res.status(500).json({ error: 'Failed to finalize date', detail: err.message });
   }
 });
+
+/** POST /api/admin/requests/:id/email-requester — Queue an outbound email to the requester */
+adminRequestsRouter.post('/requests/:id/email-requester', requirePike13Admin, async (req: Request, res: Response) => {
+  try {
+    const { subject, body } = req.body || {};
+    if (!subject) {
+      return res.status(400).json({ error: 'subject is required' });
+    }
+    if (!body) {
+      return res.status(400).json({ error: 'body is required' });
+    }
+
+    const prisma = req.services.prisma;
+    const requestRecord = await prisma.eventRequest.findUnique({ where: { id: req.params.id } });
+    if (!requestRecord) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    if (!requestRecord.emailThreadAddress) {
+      return res.status(422).json({ error: 'no_thread_address' });
+    }
+
+    await req.services.emailQueue.enqueue({
+      to: requestRecord.requesterEmail,
+      subject,
+      text: body,
+      replyTo: requestRecord.emailThreadAddress,
+      requestId: requestRecord.id,
+    });
+
+    return res.status(201).json({ queued: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to queue email', detail: err.message });
+  }
+});
