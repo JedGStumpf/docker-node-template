@@ -23,6 +23,8 @@ export interface CreateRequestInput {
   siteReadiness?: string;
   marketingCapability?: string;
   registeredSiteId?: number;
+  /** Initial status for the request. Defaults to 'unverified'. Use 'no_instructor' when no coverage is found. */
+  status?: string;
 }
 
 export interface TransitionData {
@@ -48,6 +50,8 @@ const VALID_TRANSITIONS: Record<string, Set<string>> = {
   // Terminal states — no transitions out
   completed: new Set(),
   cancelled: new Set(),
+  // Requests without instructor coverage — awaiting future instructor assignment
+  no_instructor: new Set(),
 };
 
 export class RequestService {
@@ -88,7 +92,7 @@ export class RequestService {
         registeredSiteId: input.registeredSiteId,
         verificationToken,
         verificationExpiresAt,
-        status: 'unverified',
+        status: input.status ?? 'unverified',
       },
     });
   }

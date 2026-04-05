@@ -104,20 +104,15 @@ requestsRouter.post('/requests', async (req: Request, res: Response) => {
       });
     }
 
-    // Check coverage
+    // Silent geo-match: determine coverage without blocking the request
     const { candidates, error } = await req.services.matching.findCandidatesByTopicAndGeo({
       zip: zipCode,
       classSlug,
     });
 
-    if (error === 'uncovered_zip' || !candidates || candidates.length === 0) {
-      return res.status(422).json({
-        error: 'No instructors available for this zip code and class',
-        code: 'no_coverage',
-      });
-    }
+    const hasCoverage = error !== 'uncovered_zip' && candidates && candidates.length > 0;
 
-    // Create the request
+    // Create the request — status depends on coverage
     const eventRequest = await req.services.requests.createRequest({
       classSlug,
       requesterName,
@@ -132,6 +127,7 @@ requestsRouter.post('/requests', async (req: Request, res: Response) => {
       siteReadiness,
       marketingCapability,
       registeredSiteId: typeof registeredSiteId === 'number' ? registeredSiteId : undefined,
+      status: hasCoverage ? undefined : 'no_instructor',
     });
 
     // Send verification email

@@ -147,12 +147,36 @@ describe('POST /api/requests', () => {
     expect(res.body.code).toBe('invalid_class_slug');
   });
 
-  it('returns 422 with no_coverage when zip has no matching instructors', async () => {
+  it('returns 201 with status no_instructor when zip has no matching instructors', async () => {
     const res = await request(app)
       .post('/api/requests')
       .send({ ...VALID_BODY, zipCode: UNCOVERED_ZIP });
-    expect(res.status).toBe(422);
-    expect(res.body.code).toBe('no_coverage');
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('id');
+    expect(res.body.status).toBe('no_instructor');
+  });
+
+  it('sends a verification email for uncovered-zip requests (no_instructor)', async () => {
+    const res = await request(app)
+      .post('/api/requests')
+      .send({ ...VALID_BODY, zipCode: UNCOVERED_ZIP });
+    expect(res.status).toBe(201);
+
+    await flushQueue(registry);
+    const transport = getEmailTransport();
+    const verifyEmail = transport.sent.find(
+      (e) => e.to === VALID_BODY.requesterEmail,
+    );
+    expect(verifyEmail).toBeDefined();
+  });
+
+  it('returns 201 with status unverified for covered-zip requests', async () => {
+    const res = await request(app)
+      .post('/api/requests')
+      .send({ ...VALID_BODY, zipCode: COVERED_ZIP });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('id');
+    expect(res.body.status).toBe('unverified');
   });
 
   it('returns 422 when required fields are missing', async () => {
