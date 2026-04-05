@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import AdminEmailComposer from '../../components/AdminEmailComposer';
+import AdminEmailThread from '../../components/AdminEmailThread';
 
 interface Registration {
   id: string;
@@ -63,6 +65,9 @@ export default function AdminRequestDetail() {
   // Registration data
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [voteTallies, setVoteTallies] = useState<Record<string, number>>({});
+
+  // Email thread refresh key
+  const [threadRefreshKey, setThreadRefreshKey] = useState(0);
 
   // Copy state
   const [copied, setCopied] = useState(false);
@@ -440,6 +445,19 @@ export default function AdminRequestDetail() {
           )}
         </div>
       )}
+
+      <AdminEmailComposer
+        requestId={id!}
+        requesterName={requestDetail.requesterName}
+        classSlug={requestDetail.classSlug}
+        hasThreadAddress={!!requestDetail.emailThreadAddress}
+        onSent={() => setThreadRefreshKey(k => k + 1)}
+      />
+
+      <AdminEmailThread
+        requestId={id!}
+        refreshKey={threadRefreshKey}
+      />
 
       {message ? <p data-testid="status-message">{message}</p> : null}
     </div>
